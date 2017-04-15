@@ -1,0 +1,39 @@
+sudo apt-get install build-essential python-dev
+sudo python setup.py install
+
+import Adafruit_DHT as dht
+h,t = dht.read_retry(dht.DHT22, 4)
+print 'Temp ={0:0.1f}*C  Humidity={1:0.2f}%'.format(t,h)
+
+wget abyz.dco.uk/rpi/pigpio/pigpio.zip
+unzip pigpio.zip
+cd pigpion
+make
+make install
+
+sudo pigpiod
+    runs a daemon so we don't need to be root
+
+import osa
+import pigpio
+import DHT22
+
+s = DHT22.sensor(pi, 4)
+s.trigger()
+print('{:3.2f}'.format(s.humidity() / 1.))
+print('{:3.2f}'.format(s.temperature() / 1.))
+
+dew point is the temperature at which dew forms. For a telescope mirror or other telescope equipment, if the temperature of the instrument falls below the dew point, dew will form on the instrument and degrade its performance.
+
+Tdp = T - (100 - RH)/5 for RH>50%
+
+This can be expressed as a simple rule of thumb:
+For every 1°C difference in the dew point and dry bulb temperatures, the relative humidity decreases by 5%, starting with RH = 100% when the dew point equals the dry bulb temperature.
+
+IOT display:
+humidity: 0-100%
+air temp: 0-120 F
+Tdp = 0-120 F
+Glass temp: 0-120 F
+Dew indicator: On/Off
+Heating element: On/Off

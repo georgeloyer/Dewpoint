@@ -1,0 +1,213 @@
+4/2/2017    gel Installed device driver for Feather HUZZAH ESP8266 WIFI
+                    https://www.silabs.com/documents/public/software/Mac_OSX_VCP_Driver.zip
+                    Documentation can be found at:
+                        https://www.silabs.com/products/development-tools/software/usb-to-uart-bridge-vcp-drivers
+                    This is for CP210X USB to UART Bridge VCP Drivers
+                    Must use Arduino 1.6.8 or later
+                    Install the ESP8266 board package:
+                        Enter http://arduino.esp8266.com/stable/package_esp8266com_index.json into 
+                        Additional Board Manager URLs field in the Arduino v1.6.4+ preferences
+                        use the Board manager to install the ESP8266 package
+                        Restart the Arduino IDE
+                        Select 'Adafruit HUZZAH ESP8266' from Tools->Board menu
+                        set 80MHz as CPU frequency
+                        keep Flash size as 4M(3M SPIFFS)
+                        set Upload Speed at 115200
+                    Docs:
+                        AP2112K-3.3V regulator onboard
+                        http://www.diodes.com/_files/datasheets/AP2112.pdf
+
+                        CP2104 USB-to-Serial converter
+                        http://www.adafruit.com/datasheets/cp2104.pdf
+
+                        EagleCAD PCB Files on GitHub
+                        https://github.com/adafruit/Adafruit-Feather-ESP8266-HUZZAH-PCB
+
+                        Fritzing object in Adafruit Fritzing Library
+                        https://github.com/adafruit/Fritzing-Library/
+
+                        ESP8266 specification sheet
+                        http://www.adafruit.com/datasheets/ESP8266_Specifications_English.pdf
+
+                        NodeMCU (Lua for ESP8266) webpage
+                        http://nodemcu.com/index_en.html
+
+                        Arduino IDE support for ESP8266
+                        https://github.com/esp8266/Arduino
+
+                Installed libraries for 2.4" TFT FeatherWing adafru.it/3315
+                    Adafruit_ILI9341
+                    Adafruit-GFX-Library
+                    Ran the graphicstest_featherwing test program to show the graphic capabilities
+                    Installed  library for TFT resistive touch screen
+                        Adafruit_STMPE610
+                    Ran the touchpaint_featherwing demo and validated operation of TFT capabilities
+                    Docs:
+                        Fritzing object in Adafruit Fritzing Library 
+                        https://github.com/adafruit/Fritzing-Library/
+                        
+                        STMPE610 
+                        http://www.adafruit.com/datasheets/STMPE610.pdf
+                        
+                        ILI9341 (TFT controller) 
+                        http://www.adafruit.com/datasheets/ILI9341.pdf
+                        
+                        EagleCAD PCB files on GitHub 
+                        https://github.com/adafruit/Adafruit-2.4-TFT-FeatherWing-PCB
+                        
+                Install Feather M0 WiFi fw19 4.4 board package:
+                     https://adafruit.github.io/arduino-board-index/package_adafruit_index.json 
+                     Install SAMD boards (both of them available) with the latest version
+                     Select M0 for the device, and the corresponding Port
+                Ran the touchpaint_featherwing demo again and got much better performance and responsiveness
+                    from the software and hardware. Used a stylus to get better location of the x-y point.
+                Ran CheckWiFi101FirmwareVersionM0, which I created by opening the Example and then 
+                    adding these two lines to the beginning of the Setup:
+                      //Configure pins for Adafruit ATWINC1500 Feather
+                      WiFi.setPins(8,7,4,2);
+                    Got the serial console report that I am running an old version of the firmware: 19.4.4
+                    This is too old for the library, need to upgrade to latest: 19.5.2
+                Install FirmwareUpdaterM0, which I created by opening the Example and then adding the same two lines
+                Got the following error when compiling:
+                    Arduino: 1.6.5 (Mac OS X), Board: "Adafruit Feather M0"
+
+FirmwareUpdaterM0:25: error: variable or field 'receivePacket' declared void
+FirmwareUpdaterM0:25: error: 'UartPacket' was not declared in this scope
+FirmwareUpdaterM0:25: error: 'pkt' was not declared in this scope
+FirmwareUpdaterM0:25: error: expected primary-expression before '*' token
+FirmwareUpdaterM0:25: error: 'payload' was not declared in this scope
+variable or field 'receivePacket' declared void
+
+  This report would have more information with
+  "Show verbose output during compilation"
+  enabled in File > Preferences.
+
+Looks like I will have to upgrade to Arduino IDE 1.8.1 (or latest) to get the firmware updater functionality.
+
+4/3/2017    gel Installed Arduino IDE 1.8.2, started right up, became default version, and the firmware update was
+                right there. Successfully updated the firmware, and ran the check again afterward, showing PASSED.
+                Uploaded SSL cert for io.adafruit.com using the FirmwareUploaderM0.
+
+                    
+With the basic components for UI and processor, I can start prototyping the humidity-temperature sensor and the remote thermopile sensor.  Order of work:
+
+1. Thermopile sensor
+2. Humidity-Temperature Sensor
+3. Data logging to SD card
+4. WiFi connection
+5. IOT MQTT set up and testing
+
+4/9/2017    gel Prepped TMP007 thermopile sensor and connected to Feather M0
+                    Black    - Vcc (3.3v)
+                    White    - GND
+                    Gray     - SDA
+                    Purple   - SCL
+                    Blue     - Alert (not connected)
+                    A0 & A1 left unconnected, sets i2c address at 0x40
+                Downloaded TMP007 library
+                https://github.com/adafruit/Adafruit_TMP007_Library
+                Ran example program: tmp007.ino
+                    Corrected problem with util/delay.h - bare include doesn't work with ARM CPUs
+                    Modified Adafruit_TMP007.cpp, replacing the line:
+                        #include <util/delay.h>
+                    with
+                        #ifdef __avr__
+                            #include <avr/pgmspace.h>
+                            #include <util/delay.h>
+                        #endif
+                        #ifdef __arm__
+                            #define _delay_ms(ms) delayMicroseconds((ms) * 1000)
+                        #endif
+                    That change allowed the program to compile, and to be uploaded.
+                    Excerpt from the serial console:
+                        Die Temperature: 23.75*C
+                        Object Temperature: 23.84*C     room temp
+                        Die Temperature: 23.91*C        
+                        Object Temperature: 30.37*C     body temp
+                        Die Temperature: 24.06*C        
+                        Object Temperature: 31.72*C     body temp
+                        Die Temperature: 24.34*C
+                        Object Temperature: 7.78*C      switch to ice water
+                        Die Temperature: 24.44*C
+                        Object Temperature: -1.09*C     ice water
+                        Die Temperature: 24.41*C
+                        Object Temperature: 0.69*C      ice water
+                        Die Temperature: 24.41*C
+                        Object Temperature: 23.62*C     room temp
+                        Die Temperature: 24.44*C
+                Prepped DHT22 humidity and temp sensor and connected to Feather M0
+                    Orange  - Vcc (3.3v)
+                    Yellow  - Data to 10 on Feather M0
+                    Red     - Gnd
+                    10K Resistor from Vcc to Data next to the DHT22
+                    Download the DHT22 and the Adafruit_Sensor libraries:
+                        https://github.com/adafruit/DHT-sensor-library
+                        https://github.com/adafruit/Adafruit_Sensor
+                    Run the program:
+                        DHTtester.ino
+                    Extract from the serial console:
+                        Humidity: 38.60 %	Temperature: 24.50 *C 76.10 *F	Heat index: 24.01 *C 75.22 *F
+                        Humidity: 38.60 %	Temperature: 24.50 *C 76.10 *F	Heat index: 24.01 *C 75.22 *F
+                        Humidity: 38.50 %	Temperature: 24.50 *C 76.10 *F	Heat index: 24.01 *C 75.22 *F
+                        Humidity: 38.50 %	Temperature: 24.50 *C 76.10 *F	Heat index: 24.01 *C 75.22 *F
+                        Humidity: 38.50 %	Temperature: 24.50 *C 76.10 *F	Heat index: 24.01 *C 75.22 *F
+                Connected both DHT22 and TMP007 to Feather M0
+                Wrote DewpointDetector.ino that combined setup and sensor data acquisition code in one
+                program, writing both to the Serial console.
+                Extract:
+                    Object Temperature: 25.72*C
+                    Die Temperature: 23.69*C
+                    Humidity: 44.70 %	Temperature: 23.00 *C 73.40 *F	Heat index: 22.52 *C 72.54 *F
+                    Object Temperature: 25.72*C
+                    Die Temperature: 23.69*C
+                    Humidity: 44.60 %	Temperature: 22.90 *C 73.22 *F	Heat index: 22.41 *C 72.34 *F
+                    Object Temperature: 25.97*C
+                    Die Temperature: 23.69*C
+                    Humidity: 44.60 %	Temperature: 22.90 *C 73.22 *F	Heat index: 22.41 *C 72.34 *F
+                    Object Temperature: 25.72*C
+                    Die Temperature: 23.69*C
+                    Humidity: 44.60 %	Temperature: 22.90 *C 73.22 *F	Heat index: 22.41 *C 72.34 *F
+
+4/10/2017   Wrote up a set of use cases for the user interface:
+                default display
+                show dewpoint graphic relating ambient, object and humidty curves
+                display object temp in real time
+                display ambient temp in real time
+                display humidity in real time
+                display dewpoint temperature in real time
+                show trend of object temp, ambient temp, humidity and dewpoint
+                    select time scale: hour, 6 hour, 12 hour, day, week, month
+                IoT reporting On/Off
+                WiFi Setup
+                    select AP
+                    set password
+                    test connection
+                    test access to IoT
+            Wrote function for calculating dewpoint:
+                float dewpointC(float c, float h) {
+                  float d, es, e;
+
+                  es = 0.611*exp(5423.0*(1.0/273.15 - 1.0/(c-273.15)));
+                  e = h/100.0*es;
+                  d = (5423.0/(19.854 - log(e/0.611))) + 273.15;
+                  return d;
+                }
+                
+4/11/2017   Wrote a test program for the dewpoint calculator
+                10     20      30      40      50      60      70      80      90      100
+                -----  ------  ------  ------  ------  ------  ------  ------  ------- --------
+            -10 -48.70 -35.98  -29.00  -24.23  -20.64  -17.77  -15.38  -13.34  -11.57  -10.01  
+            -5  -42.26 -30.03  -23.31  -18.72  -15.26  -12.49  -10.19  - 8.23  - 6.52  - 5.01  
+            0   -35.84 -24.10  -17.64  -13.22  - 9.89  - 7.22  - 5.00  - 3.11  - 1.46  - 0.01  
+            5   -29.46 -18.19  -11.98  - 7.73  - 4.52  - 1.95    0.18    2.00    3.59    4.99  
+            10  -23.11 -12.30  - 6.33  - 2.25    0.83    3.31    5.36    7.11    8.64    9.99  
+            15  -16.79 - 6.43  - 0.70    3.22    6.19    8.56   10.54   12.22   13.69   14.99  
+            20  -10.49 - 0.57    4.92    8.68   11.53   13.81   15.71   17.33   18.74   19.99  
+            25  - 4.23   5.27   10.53   14.13   16.87   19.06   20.88   22.43   23.79   25.00  
+            30    2.00  11.08   16.12   19.58   22.20   24.30   26.04   27.54   28.84   30.00  
+            35    8.20  16.88   21.70   25.01   27.52   29.53   31.21   32.64   33.89   35.00  
+            40   14.38  22.66   27.27   30.43   32.83   34.76   36.36   37.74   38.93   40.00  
+            45   20.52  28.43   32.82   35.85   38.14   39.98   41.52   42.83   43.98   45.00   
+            
+            Updated the main DewpointDetector program to print dewpoint for given ambient temp and humidity.
+
