@@ -24,13 +24,17 @@
  * real time.
  *******************************************************/
 
-#include "DHT.h"
-#define DHTPIN 10     // what digital pin we're connected to
+#include <Adafruit_Sensor.h>
+#include <DHT.h>
+#include <DHT_U.h>
+#define DHTPIN 11     // what digital pin we're connected to
 #define DHTTYPE DHT22   // DHT 22  (AM2302), AM2321
 // Connect pin 1 (on the left) of the sensor to +3.3V
 // Connect pin 2 of the sensor to whatever your DHTPIN is
 // Connect pin 4 (on the right) of the sensor to GROUND
 // Connect a 10K resistor from pin 2 (data) to pin 1 (power) of the sensor
+// Depends on Adafruit Unified Sensor Library:  https://github.com/adafruit/Adafruit_Sensor
+// Depends on DHT Sensor Library: https://github.com/adafruit/DHT-sensor-library
 
 #include <Wire.h>
 #include "Adafruit_TMP007.h"
@@ -42,8 +46,8 @@
 #include <SPI.h>
 #include <Adafruit_GFX.h>    // Core graphics library
 #include <Adafruit_ILI9341.h> // Hardware-specific library
-//#include <SD.h>
-//#include <Adafruit_STMPE610.h>
+#include <SD.h>
+#include <Adafruit_STMPE610.h>
 
 #ifdef ESP8266
    #define STMPE_CS 16
@@ -77,18 +81,20 @@
 #endif
 
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
-//Adafruit_STMPE610 ts = Adafruit_STMPE610(STMPE_CS);
+Adafruit_STMPE610 ts = Adafruit_STMPE610(STMPE_CS);
 
 
 // This is calibration data for the raw touch data to the screen coordinates
-//#define TS_MINX 3800
-//#define TS_MAXX 100
-//#define TS_MINY 100
-//#define TS_MAXY 3750
+#define TS_MINX 3800
+#define TS_MAXX 100
+#define TS_MINY 100
+#define TS_MAXY 3750
 
 //#define PENRADIUS 3
 
-DHT dht(DHTPIN, DHTTYPE);
+DHT_Unified dht(DHTPIN, DHTTYPE);
+uint32_t delayMS;
+
 Adafruit_TMP007 tmp007; //Start with the default i2c address 0x40
 
 void setup() {
@@ -96,12 +102,12 @@ void setup() {
   delay(10);
   Serial.println("DewpointDetector 1.0");
 
-//  Serial.println("Starting touchscreen controller.");
-//  if (!ts.begin()) {
-//    Serial.println("Couldn't start touchscreen controller.");
-//    while (1);
-//  }
-//  Serial.println("Touchscreen started.");
+  Serial.println("Starting touchscreen controller.");
+  if (!ts.begin()) {
+    Serial.println("Couldn't start touchscreen controller.");
+    while (1);
+  }
+  Serial.println("Touchscreen started.");
 
   Serial.println("Starting TFT device.");
   tft.begin();
@@ -111,11 +117,11 @@ void setup() {
   Serial.println("Yielding.");
   yield();
   Serial.println("Started Touch Screen and Screen Driver.");
-//  Serial.print("Starting SD card.");
-//  if (!SD.begin(SD_CS)) {
-//    Serial.println("SD card start failed!");
-//  }
-//  Serial.println("SD cart started.");
+  Serial.print("Starting SD card.");
+  if (!SD.begin(SD_CS)) {
+    Serial.println("SD card start failed!");
+  }
+  Serial.println("SD cart started.");
 
   // you can also use tmp007.begin(TMP007_CFG_1SAMPLE) or 2SAMPLE/4SAMPLE/8SAMPLE to have
   // lower precision, higher rate sampling. default is TMP007_CFG_16SAMPLE which takes
@@ -127,60 +133,75 @@ void setup() {
   }
   Serial.println("Thermopile tmp007 sensor started.");
 
-  Serial.println("Starting Humidity-temp sensor DHT-11.");
-//  dht.begin(); 
-//  yield();
 
+  Serial.println("Starting Humidity-temp sensor DHT-11.");
+  dht.begin(); 
+  // Print temperature sensor details.
+  sensor_t sensor;
+  dht.temperature().getSensor(&sensor);
+  Serial.println("------------------------------------");
+  Serial.println("Temperature");
+  Serial.print  ("Sensor:       "); Serial.println(sensor.name);
+  Serial.print  ("Driver Ver:   "); Serial.println(sensor.version);
+  Serial.print  ("Unique ID:    "); Serial.println(sensor.sensor_id);
+  Serial.print  ("Max Value:    "); Serial.print(sensor.max_value); Serial.println(" *C");
+  Serial.print  ("Min Value:    "); Serial.print(sensor.min_value); Serial.println(" *C");
+  Serial.print  ("Resolution:   "); Serial.print(sensor.resolution); Serial.println(" *C");  
+  Serial.println("------------------------------------");
+  // Print humidity sensor details.
+  dht.humidity().getSensor(&sensor);
+  Serial.println("------------------------------------");
+  Serial.println("Humidity");
+  Serial.print  ("Sensor:       "); Serial.println(sensor.name);
+  Serial.print  ("Driver Ver:   "); Serial.println(sensor.version);
+  Serial.print  ("Unique ID:    "); Serial.println(sensor.sensor_id);
+  Serial.print  ("Max Value:    "); Serial.print(sensor.max_value); Serial.println("%");
+  Serial.print  ("Min Value:    "); Serial.print(sensor.min_value); Serial.println("%");
+  Serial.print  ("Resolution:   "); Serial.print(sensor.resolution); Serial.println("%");  
+  Serial.println("------------------------------------");
+  // Set delay between sensor readings based on sensor details.
+  delayMS = sensor.min_delay / 1000;
 }
 
 void loop() {
-   float objt = tmp007.readObjTempC();
-//    float objt = 19.8;
-   Serial.print("Object Temperature: "); Serial.print(objt); Serial.println("*C");
-   float diet = tmp007.readDieTempC();
-   Serial.print("Die Temperature: "); Serial.print(diet); Serial.println("*C");
+  float t, h, d;
+  
+  // Delay between measurements
+  delay(delayMS);
+  float objt = tmp007.readObjTempC();
+  Serial.print("Object Temperature: "); Serial.print(objt); Serial.print("*C  ");
+  float diet = tmp007.readDieTempC();
+  Serial.print("Die Temperature: "); Serial.print(diet); Serial.print("*C  ");
    
   // Reading temperature or humidity takes about 250 milliseconds!
   // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
-//    float h = dht.readHumidity();
-    float h = 20.4;
-  // Read temperature as Celsius (the default)
-//    float t = dht.readTemperature();
-    float t = 21.5;
-  // Read temperature as Fahrenheit (isFahrenheit = true)
-//  float f = dht.readTemperature(true);
+  
+  sensors_event_t event;
+  dht.temperature().getEvent(&event);
+    if (isnan(event.temperature)) {
+    Serial.println("Error reading temperature!");
+  }
+  else {
+    t = event.temperature;
+  }
+  dht.humidity().getEvent(&event);
+  if (isnan(event.relative_humidity)) {
+    Serial.println("Error reading temperature!");
+  }
+  else {
+    h = event.relative_humidity;
+  }
+  d = dewpointC(t, h);
 
-//  float d = dewpointC(t, h);
-    float d = 18.6;
-  // Check if any reads failed and exit early (to try again).
-//  if (isnan(h) || isnan(t) || isnan(f)) {
-//    Serial.println("Failed to read from DHT sensor!");
-//    return;
-//  }
-
-  // Compute heat index in Fahrenheit (the default)
-//  float hif = dht.computeHeatIndex(f, h);
-  // Compute heat index in Celsius (isFahreheit = false)
-//  float hic = dht.computeHeatIndex(t, h, false);
-
-//  Serial.print("Humidity: ");
-//  Serial.print(h);
-//  Serial.print(" %\t");
-//  Serial.print("Temperature: ");
-//  Serial.print(t);
-//  Serial.print(" *C ");
-//  Serial.print(f);
-//  Serial.print(" *F\t");
-//  Serial.print("Dewpoint temp: ");
-//  Serial.print(d);
-//  Serial.print(" *C ");
-//  Serial.print(CtoF(d));
-//  Serial.println(" *F");
-//  Serial.print("Heat index: ");
-//  Serial.print(hic);
-//  Serial.print(" *C ");
-//  Serial.print(hif);
-//  Serial.println(" *F");
+  Serial.print("Humidity: ");
+  Serial.print(h);
+  Serial.print(" %\t");
+  Serial.print("Temperature: ");
+  Serial.print(t);
+  Serial.print(" *C ");
+  Serial.print("Dewpoint temp: ");
+  Serial.print(d);
+  Serial.println(" *C ");
 
   displayData(h, t, objt, d);
 
