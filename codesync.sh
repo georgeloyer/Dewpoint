@@ -14,7 +14,8 @@ rsync -azvt /Users/gloyer/Documents/Arduino/FeatherHumTempDew /Users/gloyer/Docu
 rsync -azvt /Users/gloyer/Documents/Arduino/libraries/Adafruit_STMPE610 /Users/gloyer/Documents/Projects/Dewpoint/arduino_libs
 rsync -azvt /Users/gloyer/Documents/Arduino/libraries/Adafruit_TMP007 /Users/gloyer/Documents/Projects/Dewpoint/arduino_libs
 rsync -azvt /Users/gloyer/Documents/Arduino/libraries/DHT-sensor-library /Users/gloyer/Documents/Projects/Dewpoint/arduino_libs
+rsync -azvt /Users/gloyer/Documents/Arduino/libraries/Adafruit_Sensor /Users/gloyer/Documents/Projects/Dewpoint/arduino_libs
 rsync -azvt /Users/gloyer/Documents/Arduino/libraries/Adafruit_MQTT_Library /Users/gloyer/Documents/Projects/Dewpoint/arduino_libs
-rsync -azvt /Users/gloyer/Documents/Arduino/libraries/Adafruit_ILI9341 /Users/gloyer/Documents/Projects/Dewpoint/arduino_libs
+rsync -azvt /Users/gloyer/Documents/Arduino/libraries/Adafruit-_ILI9341 /Users/gloyer/Documents/Projects/Dewpoint/arduino_libs
 rsync -azvt /Users/gloyer/Documents/Arduino/libraries/Adafruit-GFX-Library /Users/gloyer/Documents/Projects/Dewpoint/arduino_libs
 rsync -azvt /Users/gloyer/Documents/Arduino/libraries/Adafruit_SSD1306 /Users/gloyer/Documents/Projects/Dewpoint/arduino_libs
