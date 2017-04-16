@@ -211,3 +211,8 @@ With the basic components for UI and processor, I can start prototyping the humi
             
             Updated the main DewpointDetector program to print dewpoint for given ambient temp and humidity.
 
+4/15/2017   Added library and object declarations to work with the TFT display
+	    Got the red border working, but text printing resulted in random noise on the screen.
+	    By process of elimination, found that reading the humidity sensor breaks the text display. Just including the dht.begin()
+	    breaks the display of text. Adding a yield() after the call to dht.begin() brings no improvement.
+

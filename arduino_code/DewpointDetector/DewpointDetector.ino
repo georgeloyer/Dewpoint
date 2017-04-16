@@ -42,8 +42,8 @@
 #include <SPI.h>
 #include <Adafruit_GFX.h>    // Core graphics library
 #include <Adafruit_ILI9341.h> // Hardware-specific library
-#include <SD.h>
-#include <Adafruit_STMPE610.h>
+//#include <SD.h>
+//#include <Adafruit_STMPE610.h>
 
 #ifdef ESP8266
    #define STMPE_CS 16
@@ -77,26 +77,16 @@
 #endif
 
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
-Adafruit_STMPE610 ts = Adafruit_STMPE610(STMPE_CS);
+//Adafruit_STMPE610 ts = Adafruit_STMPE610(STMPE_CS);
 
 
 // This is calibration data for the raw touch data to the screen coordinates
-#define TS_MINX 3800
-#define TS_MAXX 100
-#define TS_MINY 100
-#define TS_MAXY 3750
+//#define TS_MINX 3800
+//#define TS_MAXX 100
+//#define TS_MINY 100
+//#define TS_MAXY 3750
 
-// Color definitions
-#define BLACK    0x0000
-#define GREEN    0x001F 
-#define BLUE     0xF800 
-#define RED      0x07E0 
-#define YELLOW   0x07FF 
-#define CYAN     0xF81F 
-#define MAGENTA  0xFFE0 
-#define WHITE    0xFFFF
-
-#define PENRADIUS 3
+//#define PENRADIUS 3
 
 DHT dht(DHTPIN, DHTTYPE);
 Adafruit_TMP007 tmp007; //Start with the default i2c address 0x40
@@ -106,29 +96,26 @@ void setup() {
   delay(10);
   Serial.println("DewpointDetector 1.0");
 
-  Serial.println("Starting touchscreen controller.");
-  if (!ts.begin()) {
-    Serial.println("Couldn't start touchscreen controller.");
-    while (1);
-  }
-  Serial.println("Touchscreen started.");
+//  Serial.println("Starting touchscreen controller.");
+//  if (!ts.begin()) {
+//    Serial.println("Couldn't start touchscreen controller.");
+//    while (1);
+//  }
+//  Serial.println("Touchscreen started.");
 
   Serial.println("Starting TFT device.");
   tft.begin();
   tft.fillScreen(ILI9341_RED);
   tft.setRotation(3);
-  tft.fillRect(10, 10, 300, 220, BLACK);
-
-
+  tft.fillRect(10, 10, 300, 220, ILI9341_BLACK);
   Serial.println("Yielding.");
   yield();
-
   Serial.println("Started Touch Screen and Screen Driver.");
-  Serial.print("Starting SD card.");
-  if (!SD.begin(SD_CS)) {
-    Serial.println("SD card start failed!");
-  }
-  Serial.println("SD cart started.");
+//  Serial.print("Starting SD card.");
+//  if (!SD.begin(SD_CS)) {
+//    Serial.println("SD card start failed!");
+//  }
+//  Serial.println("SD cart started.");
 
   // you can also use tmp007.begin(TMP007_CFG_1SAMPLE) or 2SAMPLE/4SAMPLE/8SAMPLE to have
   // lower precision, higher rate sampling. default is TMP007_CFG_16SAMPLE which takes
@@ -141,84 +128,79 @@ void setup() {
   Serial.println("Thermopile tmp007 sensor started.");
 
   Serial.println("Starting Humidity-temp sensor DHT-11.");
-  dht.begin(); 
+//  dht.begin(); 
+//  yield();
 
 }
 
 void loop() {
    float objt = tmp007.readObjTempC();
+//    float objt = 19.8;
    Serial.print("Object Temperature: "); Serial.print(objt); Serial.println("*C");
    float diet = tmp007.readDieTempC();
    Serial.print("Die Temperature: "); Serial.print(diet); Serial.println("*C");
    
   // Reading temperature or humidity takes about 250 milliseconds!
   // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
-  float h = dht.readHumidity();
+//    float h = dht.readHumidity();
+    float h = 20.4;
   // Read temperature as Celsius (the default)
-  float t = dht.readTemperature();
+//    float t = dht.readTemperature();
+    float t = 21.5;
   // Read temperature as Fahrenheit (isFahrenheit = true)
-  float f = dht.readTemperature(true);
+//  float f = dht.readTemperature(true);
 
-  float d = dewpointC(t, h);
-
+//  float d = dewpointC(t, h);
+    float d = 18.6;
   // Check if any reads failed and exit early (to try again).
-  if (isnan(h) || isnan(t) || isnan(f)) {
-    Serial.println("Failed to read from DHT sensor!");
-    return;
-  }
+//  if (isnan(h) || isnan(t) || isnan(f)) {
+//    Serial.println("Failed to read from DHT sensor!");
+//    return;
+//  }
 
   // Compute heat index in Fahrenheit (the default)
-  float hif = dht.computeHeatIndex(f, h);
+//  float hif = dht.computeHeatIndex(f, h);
   // Compute heat index in Celsius (isFahreheit = false)
-  float hic = dht.computeHeatIndex(t, h, false);
+//  float hic = dht.computeHeatIndex(t, h, false);
 
-  Serial.print("Humidity: ");
-  Serial.print(h);
-  Serial.print(" %\t");
-  Serial.print("Temperature: ");
-  Serial.print(t);
-  Serial.print(" *C ");
-  Serial.print(f);
-  Serial.print(" *F\t");
-  Serial.print("Dewpoint temp: ");
-  Serial.print(d);
-  Serial.print(" *C ");
-  Serial.print(CtoF(d));
-  Serial.println(" *F");
+//  Serial.print("Humidity: ");
+//  Serial.print(h);
+//  Serial.print(" %\t");
+//  Serial.print("Temperature: ");
+//  Serial.print(t);
+//  Serial.print(" *C ");
+//  Serial.print(f);
+//  Serial.print(" *F\t");
+//  Serial.print("Dewpoint temp: ");
+//  Serial.print(d);
+//  Serial.print(" *C ");
+//  Serial.print(CtoF(d));
+//  Serial.println(" *F");
 //  Serial.print("Heat index: ");
 //  Serial.print(hic);
 //  Serial.print(" *C ");
 //  Serial.print(hif);
 //  Serial.println(" *F");
 
+  displayData(h, t, objt, d);
+
   delay(4000); // 4 seconds per reading for 16 samples per reading, and give DHT sensor a rest, too
 
 }
 
-float FtoC(float f) {
-  float c;
+// Convert Centigrade temperature to Farenheit
 
-  c = (f - 32.0) * 5.0 / 9.0;
-  return c;
-}
 float CtoF(float c) {
   float f;
 
   f = c * 9.0 / 5.0 + 32.0;
   return f;
 }
-float CtoK(float c) {
-  float k;
 
-  k = c + 273.15;
-  return k;
-}
-float KtoC(float k) {
-  float c;
+// Calculate the dewpoint given temperature in Centigrade
+//  and percent humidity. Returns the dewpoint temperature
+//  in Centigrade.
 
-  c = k - 273.15;
-  return c;
-}
 float dewpointC(float c, float h) {
   float d, es, e;
 
@@ -226,5 +208,29 @@ float dewpointC(float c, float h) {
   e = h/100.0*es;
   d = (5423.0/(19.854 - log(e/0.611))) + 273.15;
   return d;
+}
+
+// Displays the humidity, ambient temperature, object temperature, 
+//  and dewpoint temperature on the TFT display
+
+void displayData(float h, float t, float o, float d) {
+  tft.setCursor(20,30);
+  tft.setTextColor(ILI9341_RED, ILI9341_BLACK);
+  tft.setTextSize(2);
+  
+  tft.print("Humidity:      ");
+  tft.println(h);
+  tft.setCursor(20,60);
+  tft.print("Ambient Temp:  ");
+  tft.println(t);
+  tft.setCursor(20,90);
+  tft.print("Mirror Temp:   ");
+  tft.println(o);
+  tft.setCursor(20,120);
+  tft.print("Dewpoint Temp: ");
+  tft.println(d);
+  tft.setCursor(20,150);
+  tft.println("Dewpoint Detector");
+  return;
 }
 
