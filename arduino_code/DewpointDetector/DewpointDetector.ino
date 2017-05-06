@@ -24,6 +24,7 @@
  * real time.
  *******************************************************/
 
+// Humidity-Temperature Sensor declarations
 #include <Adafruit_Sensor.h>
 #include <DHT.h>
 #include <DHT_U.h>
@@ -36,6 +37,7 @@
 // Depends on Adafruit Unified Sensor Library:  https://github.com/adafruit/Adafruit_Sensor
 // Depends on DHT Sensor Library: https://github.com/adafruit/DHT-sensor-library
 
+// Thermopile sensor declarations
 #include <Wire.h>
 #include "Adafruit_TMP007.h"
 // Connect VCC to +3.3V 
@@ -43,12 +45,17 @@
 // SCL connects to the I2C clock pin.
 // SDA connects to the I2C data pin. 
 
+// WiFi declarations
 #include <SPI.h>
+#include <WiFi101.h>
+
+// TFT screen and graphics library declarations
 #include <Adafruit_GFX.h>    // Core graphics library
 #include <Adafruit_ILI9341.h> // Hardware-specific library
 #include <SD.h>
 #include <Adafruit_STMPE610.h>
 
+// CPU macro setup of pins for TFT screen
 #ifdef ESP8266
    #define STMPE_CS 16
    #define TFT_CS   0
@@ -80,22 +87,21 @@
    #define SD_CS    PC5
 #endif
 
-Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
-Adafruit_STMPE610 ts = Adafruit_STMPE610(STMPE_CS);
-
-
 // This is calibration data for the raw touch data to the screen coordinates
 #define TS_MINX 3800
 #define TS_MAXX 100
 #define TS_MINY 100
 #define TS_MAXY 3750
 
-//#define PENRADIUS 3
+#define PENRADIUS 3
 
+// instantiate instances of each object type
+Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
+Adafruit_STMPE610 ts = Adafruit_STMPE610(STMPE_CS);
 DHT_Unified dht(DHTPIN, DHTTYPE);
-uint32_t delayMS;
-
 Adafruit_TMP007 tmp007; //Start with the default i2c address 0x40
+
+uint32_t delayMS;
 
 void setup() {
   Serial.begin(115200);
@@ -133,7 +139,6 @@ void setup() {
   }
   Serial.println("Thermopile tmp007 sensor started.");
 
-
   Serial.println("Starting Humidity-temp sensor DHT-11.");
   dht.begin(); 
   // Print temperature sensor details.
@@ -161,6 +166,25 @@ void setup() {
   Serial.println("------------------------------------");
   // Set delay between sensor readings based on sensor details.
   delayMS = sensor.min_delay / 1000;
+
+  Serial.println("Starting WiFi.");
+  // Configure pins for Adafruit ATWINC1500 Feather
+  WiFi.setPins(8,7,4,2);
+  // check for the presence of the shield:
+  if (WiFi.status() == WL_NO_SHIELD) {
+    Serial.println("WiFi shield not present, halting.");
+    // don't continue:
+    while (true);
+  }
+
+  // Print WiFi MAC address:
+  printMacAddress();
+
+  // scan for existing networks:
+  Serial.println("Scanning available networks...");
+  listNetworks();
+  //chooseNetwork();
+  //requestSend();
 }
 
 void loop() {
@@ -254,4 +278,102 @@ void displayData(float h, float t, float o, float d) {
   tft.println("Dewpoint Detector");
   return;
 }
+
+void printMacAddress() {
+  // the MAC address of your WiFi shield
+  byte mac[6];
+
+  // print your MAC address:
+  WiFi.macAddress(mac);
+  Serial.print("MAC: ");
+  print2Digits(mac[5]);
+  Serial.print(":");
+  print2Digits(mac[4]);
+  Serial.print(":");
+  print2Digits(mac[3]);
+  Serial.print(":");
+  print2Digits(mac[2]);
+  Serial.print(":");
+  print2Digits(mac[1]);
+  Serial.print(":");
+  print2Digits(mac[0]);
+}
+
+void listNetworks() {
+  // scan for nearby networks:
+  Serial.println("** Scan Networks **");
+  int numSsid = WiFi.scanNetworks();
+  if (numSsid == -1)
+  {
+    Serial.println("Couldn't get a WiFi connection");
+    while (true);
+  }
+
+  // print the list of networks seen:
+  Serial.print("number of available networks: ");
+  Serial.println(numSsid);
+
+  // print the network number and name for each network found:
+  for (int thisNet = 0; thisNet < numSsid; thisNet++) {
+    Serial.print(thisNet + 1);
+    Serial.print(") ");
+    Serial.print("Signal: ");
+    Serial.print(WiFi.RSSI(thisNet));
+    Serial.print(" dBm");
+    Serial.print("\tChannel: ");
+    Serial.print(WiFi.channel(thisNet));
+    byte bssid[6];
+    Serial.print("\t\tBSSID: ");
+    printBSSID(WiFi.BSSID(thisNet, bssid));
+    Serial.print("\tEncryption: ");
+    printEncryptionType(WiFi.encryptionType(thisNet));
+    Serial.print("\t\tSSID: ");
+    Serial.println(WiFi.SSID(thisNet));
+    Serial.flush();
+  }
+  Serial.println();
+}
+
+void printBSSID(byte bssid[]) {
+  print2Digits(bssid[5]);
+  Serial.print(":");
+  print2Digits(bssid[4]);
+  Serial.print(":");
+  print2Digits(bssid[3]);
+  Serial.print(":");
+  print2Digits(bssid[2]);
+  Serial.print(":");
+  print2Digits(bssid[1]);
+  Serial.print(":");
+  print2Digits(bssid[0]);
+}
+
+void printEncryptionType(int thisType) {
+  // read the encryption type and print out the name:
+  switch (thisType) {
+    case ENC_TYPE_WEP:
+      Serial.print("WEP");
+      break;
+    case ENC_TYPE_TKIP:
+      Serial.print("WPA");
+      break;
+    case ENC_TYPE_CCMP:
+      Serial.print("WPA2");
+      break;
+    case ENC_TYPE_NONE:
+      Serial.print("None");
+      break;
+    case ENC_TYPE_AUTO:
+      Serial.print("Auto");
+      break;
+  }
+}
+
+void print2Digits(byte thisByte) {
+  if (thisByte < 0xF) {
+    Serial.print("0");
+  }
+  Serial.print(thisByte, HEX);
+}
+
 

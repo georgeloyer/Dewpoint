@@ -216,3 +216,175 @@ With the basic components for UI and processor, I can start prototyping the humi
 	    By process of elimination, found that reading the humidity sensor breaks the text display. Just including the dht.begin()
 	    breaks the display of text. Adding a yield() after the call to dht.begin() brings no improvement.
 
+4/16/17	Humidity sensor interference with the TFT display was caused by use of pin 10, which is also
+	used by the TFT display. Wired DFT to pin 11 and fixed the code.
+	In the meantime, as part of the troubleshooting found and began using DHT_Sensor_Library with Adafruit_Sensor library.
+	This is a standard way of interacting with Sensors that Adafruit adapted from Android code. It creates an abstract layer
+	for sensor interfaces that normalizes them all to use the same structure. This allows you to swap sensors with little
+	code change. The TMP007 doesn’t have an Adafruit-provided version of the driver that works with Adafruit_Sensor yet.
+
+	Revised list of use cases for user interface:
+		default display
+		display object temp in real time
+		display ambient temp in real time
+		display humidity in real time
+		display dewpoint temperature in real time
+		display explanation of dewpoint
+		show time series relating ambient temp, object temp, humidity and dewpoint
+		select time scale: hour, 6 hour, 12 hour, day, week, month
+		IoT reporting On/Off
+		WiFi Setup
+			select AP
+			set password
+			test connection
+		test access to IoT
+
+4/21/2017 Revised WiFi Setup
+		void listNetworks()
+		char* chooseNetwork() - returns a pointer to a string containing the name of the network
+			create a scrollable list
+			if the list is larger than the screen, create a scroll bar with up and down control buttons
+			respond to scroll button presses to move the list up and down
+		Choose one of the access points by touching anywhere on the line
+			set the ssid to the chosen AP name
+		Display password form field and alpha numeric keyboard for entering password
+			accept key presses, and echo the key press chars on the password field
+			When the Done button is pressed, set the password to the entered password string
+		Connect to WiFi
+			wait 10 seconds for it to complete start up
+			print wifi status information as debug
+		Send test connection request to IoT
+		Read response and parse to validate successful connection.
+	Found that I was going to need an event manager to notice screen taps for a user interface. checked three:
+		https://github.com/AndreiDegtiarev/AWind - complex windows UI designer, requires UTFT and URTouch libraries
+			which I had used on a previous project, but the author has not updated them for use with Feather MO
+			CPU and the hardware configuration file looked pretty daunting
+		https://github.com/arcturial/arduino-event failed to compile
+		https://github.com/igormiktor/arduino-EventManager worked well and looks like a simple solution
+
+4/22/2017 What does an interrupt-based event manager program look like?
+		InterruptHandler
+			if touch screen interrupt on pin X
+				get screen coordinates
+				post touch event and screen coordinates
+			else if timer interrupt
+				post timer event for humidity/temp/thermopile
+		Listener for sensors 
+			get humidity 
+			get temp
+			get object temp
+			log humidity, temp, dewpoint, object temp on SD card with time stamp
+			post humidity, temp, dewpoint, object temp to IOT service
+		Listener for touch screen tap
+			Call UI State Machine with touch coordinates
+	Setup
+		Set up Timer interrupts (see example With interrupts in Event Manager library)
+		Set up sensors for humidity/temp and thermopile
+		Set up TFT and touch screen
+		Set up UI state machine
+		Set up Wifi
+		AddListener: sensors
+		AddListener: touch
+	Loop
+		processEvents
+	UI State Machine
+		Each screen has targets for touch
+			case targetN
+				state action
+				new state (screen)
+			else
+				no action
+		Screen: WiFi Setup-Choose Access Point
+			target: Scroll Up
+				scrollListUp()
+			target: Scroll Down
+				scrollListDown()
+			target: line 1
+				chooseListItem(1)
+				Screen=WiFi Setup-Enter Password
+			target: line 2
+				chooseListItem(2)
+				Screen=WiFi Setup-Enter Password
+			…
+			target: line N
+				chooseListItem(N)
+				Screen=WiFi Setup-Enter Password
+		Screen: WiFi Setup-Enter Password
+			target: keyboard characters with upper/lower case, numbers, punctuation
+			target: done 
+				testWiFi(password)
+				if success
+					Screen=Time and Date Setup
+				else
+					Screen=WiFi-Choose Access Point
+		Screen: Time and Date Setup
+		Screen: IOT Enable/Disable
+		Screen: Default Display
+		Screen: Object Temp Display
+		Screen: Ambient Temp Display
+		Screen: Humidity Display
+		Screen: Dew Point Display
+		Screen: Dew Point Help
+		Screen: Time Series-hour
+		Screen: Time Series-6 hour
+		Screen: Time Series-12 hour
+		Screen: Time Series-day
+		Screen: Time Series-week
+		Screen: Time Series-month
+4/24/2017 Interrupt testing
+	Wrote the TouchScreenInterruptTest after soldering a lead from the INT pad on the TFT and connecting the other end to pin 12
+	on the Feather. The program sets up the TFT, the TouchScreen, volatile variables for x, y points and for a gotPoint status.
+	During setup, the attachInterrupt call is made to connect the interrupt to changes on pin 12. 
+
+	This didn’t work. I put a meter on the INT pin, unconnected to the Feather, and found that touch down took the digital signal
+	to LOW and touch up (not touching) took the digital signal on INT to HIGH.   The program confirms the digitalPinToInterrupt(12)
+	returns INT=12 and a single tap at the start of the program causes an x, y coordinate pair to print, but no second touch will
+	generate an indication it was received - as if the interrupt is not being reset and no subsequent interrupt is picked up.
+
+4/26/2017 Interrupt operation of STMPE610
+	ts.begin // interrupt related registers set
+		writeRegister8(STMPE_INT_EN, STMPE_INT_EN_TOUCHDET); //enables touch detect interrupt
+  		writeRegister8(STMPE_INT_STA, 0xFF); // reset all ints
+  		writeRegister8(STMPE_INT_CTRL, STMPE_INT_CTRL_POL_HIGH | STMPE_INT_CTRL_ENABLE);
+			// Sets interrupt to active high/rising edge
+			// Sets Global Int ON
+			// Leaves INT_TYPE, by default, set to 0 or Level Interrupt (HIGH - see INT_POLARITY above)
+
+	ISR
+		TS_Point p; //declare p as type TS_Point
+		p = ts.getPoint(); 
+			// calls ts.readData(x,y,z)
+				returns data in locations with addresses for x, y, z
+				ONLY IF the buffer is empty does the interrupt get reset (and it resets all interrupts)
+
+5/5/2017
+	Wrote TouchScreenInterruptTest and it failed to reliably catch interrupts from the touch screen. It didn’t fail completely.
+	Some interrupts did get caught, but it finally seemed like some other code was interfering with interrupts and it seemed
+	overly complex.
+
+	TouchScreenEvtMgrTest is a test of the EventManager library.  This library relies on polling from loop() to catch a touch
+	and then post an event in a small event queue. It provides the ability to create multiple listeners, up to 8 as default
+	configured. 
+
+	Initialization
+	declare listenerButtonDown
+		while the touch buffer is not empty
+			get the next touch point in the buffer
+		do the downAction
+		while the screen is touched
+			delay 25 ms (debounce)
+		do the upAction
+		queue the menu event
+
+	declare listenerMenu
+		(nothing here yet)
+	setup()
+	loop()
+	getButtonDownEvent()
+		queue the touchDown event
+	startAction()
+		draw red button
+	downAction()
+		change button to yellow
+	upAction()
+		alternate button color to blue or red				

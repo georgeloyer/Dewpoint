@@ -9,6 +9,8 @@
 rsync -azvt /Users/gloyer/Documents/Arduino/DewpointDetector /Users/gloyer/Documents/Projects/Dewpoint/arduino_code
 rsync -azvt /Users/gloyer/Documents/Arduino/DewpointCalcTest /Users/gloyer/Documents/Projects/Dewpoint/arduino_code
 rsync -azvt /Users/gloyer/Documents/Arduino/FeatherHumTempDew /Users/gloyer/Documents/Projects/Dewpoint/arduino_code
+rsync -azvt /Users/gloyer/Documents/Arduino/TouchScreenEvtMgrTest /Users/gloyer/Documents/Projects/Dewpoint/arduino_code
+rsync -azvt /Users/gloyer/Documents/Arduino/TouchScreenInterruptTest /Users/gloyer/Documents/Projects/Dewpoint/arduino_code
 
 # arduino_libs
 rsync -azvt /Users/gloyer/Documents/Arduino/libraries/Adafruit_STMPE610 /Users/gloyer/Documents/Projects/Dewpoint/arduino_libs
@@ -19,3 +21,4 @@ rsync -azvt /Users/gloyer/Documents/Arduino/libraries/Adafruit_MQTT_Library /Use
 rsync -azvt /Users/gloyer/Documents/Arduino/libraries/Adafruit-_ILI9341 /Users/gloyer/Documents/Projects/Dewpoint/arduino_libs
 rsync -azvt /Users/gloyer/Documents/Arduino/libraries/Adafruit-GFX-Library /Users/gloyer/Documents/Projects/Dewpoint/arduino_libs
 rsync -azvt /Users/gloyer/Documents/Arduino/libraries/Adafruit_SSD1306 /Users/gloyer/Documents/Projects/Dewpoint/arduino_libs
+rsync -azvt /Users/gloyer/Documents/Arduino/libraries/EventManager /Users/gloyer/Documents/Projects/Dewpoint/arduino_libs
