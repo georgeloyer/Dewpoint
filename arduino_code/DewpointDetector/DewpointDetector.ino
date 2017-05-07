@@ -104,7 +104,10 @@ Adafruit_STMPE610 ts = Adafruit_STMPE610(STMPE_CS);
 DHT_Unified dht(DHTPIN, DHTTYPE);
 Adafruit_TMP007 tmp007; //Start with the default i2c address 0x40
 EventManager gEM;
-
+sensors_event_t event;
+float t, h, d, objt, diet;
+unsigned long lastSensorTime, rightNow;
+int sensorTimerSecs;
 uint32_t delayMS;
 
 void setup() {
@@ -190,7 +193,15 @@ void setup() {
   }
   // Set delay between sensor readings based on sensor details.
   delayMS = sensor.min_delay / 1000;
+  lastSensorTime = millis();  // time in millis since the last sensor reading
+  sensorTimerSecs = 10;                 // time in seconds between sensor readings
+  gEM.addListener(EventManager::kEventUser0, listenerSensorTimer); // Sensor timer listener
+  if (DEBUG) {
+    Serial.print( "Number of listeners: " );
+    Serial.println( gEM.numListeners() );
+  }
 
+/*
   if (DEBUG) {
     Serial.println("Starting WiFi.");
   }
@@ -213,231 +224,14 @@ void setup() {
   listNetworks();
   //chooseNetwork();
   //requestSend();
+*/
 }
 
 void loop() {
-  float t, h, d;
-  
-  // Delay between measurements
-  delay(delayMS);
-  float objt = tmp007.readObjTempC();
-  if (DEBUG) {
-    Serial.print("Object Temperature: "); Serial.print(objt); Serial.print("*C  ");
-  }
-  float diet = tmp007.readDieTempC();
-  if (DEBUG) {
-    Serial.print("Die Temperature: "); Serial.print(diet); Serial.print("*C  ");
-  }
-   
-  // Reading temperature or humidity takes about 250 milliseconds!
-  // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
-  
-  sensors_event_t event;
-  dht.temperature().getEvent(&event);
-    if (isnan(event.temperature)) {
-    if (DEBUG) {
-      Serial.println("Error reading temperature!");
-    }
-  }
-  else {
-    t = event.temperature;
-  }
-  dht.humidity().getEvent(&event);
-  if (isnan(event.relative_humidity)) {
-    if (DEBUG) {
-      Serial.println("Error reading temperature!");
-    }
-  }
-  else {
-    h = event.relative_humidity;
-  }
-  d = dewpointC(t, h);
-
-  if (DEBUG) {
-    Serial.print("Humidity: ");
-    Serial.print(h);
-    Serial.print(" %\t");
-    Serial.print("Temperature: ");
-    Serial.print(t);
-    Serial.print(" *C ");
-    Serial.print("Dewpoint temp: ");
-    Serial.print(d);
-    Serial.println(" *C ");
-  } 
-
-  displayData(h, t, objt, d);
-
-  delay(4000); // 4 seconds per reading for 16 samples per reading, and give DHT sensor a rest, too
-
+  // Handle any events in the queue
+  gEM.processEvent();
+  createSensorTimerEvents();
 }
 
-// Convert Centigrade temperature to Farenheit
-
-float CtoF(float c) {
-  float f;
-
-  f = c * 9.0 / 5.0 + 32.0;
-  return f;
-}
-
-// Calculate the dewpoint given temperature in Centigrade
-//  and percent humidity. Returns the dewpoint temperature
-//  in Centigrade.
-
-float dewpointC(float c, float h) {
-  float d, es, e;
-
-  es = 0.611*exp(5423.0*(1.0/273.15 - 1.0/(c-273.15)));
-  e = h/100.0*es;
-  d = (5423.0/(19.854 - log(e/0.611))) + 273.15;
-  return d;
-}
-
-// Displays the humidity, ambient temperature, object temperature, 
-//  and dewpoint temperature on the TFT display
-
-void displayData(float h, float t, float o, float d) {
-  tft.setCursor(20,30);
-  tft.setTextColor(ILI9341_RED, ILI9341_BLACK);
-  tft.setTextSize(2);
-  
-  tft.print("Humidity:      ");
-  tft.println(h);
-  tft.setCursor(20,60);
-  tft.print("Ambient Temp:  ");
-  tft.println(t);
-  tft.setCursor(20,90);
-  tft.print("Mirror Temp:   ");
-  tft.println(o);
-  tft.setCursor(20,120);
-  tft.print("Dewpoint Temp: ");
-  tft.println(d);
-  tft.setCursor(20,150);
-  tft.println("Dewpoint Detector");
-  return;
-}
-
-void printMacAddress() {
-  // the MAC address of your WiFi shield
-  byte mac[6];
-
-  // print your MAC address:
-  WiFi.macAddress(mac);
-  if (DEBUG) {
-    Serial.print("MAC: ");
-    print2Digits(mac[5]);
-    Serial.print(":");
-    print2Digits(mac[4]);
-    Serial.print(":");
-    print2Digits(mac[3]);
-    Serial.print(":");
-    print2Digits(mac[2]);
-    Serial.print(":");
-    print2Digits(mac[1]);
-    Serial.print(":");
-    print2Digits(mac[0]);
-  }
-}
-
-void listNetworks() {
-  // scan for nearby networks:
-  if (DEBUG) {
-    Serial.println("** Scan Networks **");
-  }
-  int numSsid = WiFi.scanNetworks();
-  if (numSsid == -1)
-  {
-    if (DEBUG) {
-      Serial.println("Couldn't get a WiFi connection");
-    }
-    while (true);
-  }
-
-  // print the list of networks seen:
-  if (DEBUG) {
-    Serial.print("number of available networks: ");
-    Serial.println(numSsid);
-  }
-  
-  // print the network number and name for each network found:
-  for (int thisNet = 0; thisNet < numSsid; thisNet++) {
-    if (DEBUG) {
-      Serial.print(thisNet + 1);
-      Serial.print(") ");
-      Serial.print("Signal: ");
-      Serial.print(WiFi.RSSI(thisNet));
-      Serial.print(" dBm");
-      Serial.print("\tChannel: ");
-      Serial.print(WiFi.channel(thisNet));
-      byte bssid[6];
-      Serial.print("\t\tBSSID: ");
-      printBSSID(WiFi.BSSID(thisNet, bssid));
-      Serial.print("\tEncryption: ");
-      printEncryptionType(WiFi.encryptionType(thisNet));
-      Serial.print("\t\tSSID: ");
-      Serial.println(WiFi.SSID(thisNet));
-      Serial.flush();
-    }
-  }
-  Serial.println();
-}
-
-void printBSSID(byte bssid[]) {
-  if (DEBUG) {
-    print2Digits(bssid[5]);
-    Serial.print(":");
-    print2Digits(bssid[4]);
-    Serial.print(":");
-    print2Digits(bssid[3]);
-    Serial.print(":");
-    print2Digits(bssid[2]);
-    Serial.print(":");
-    print2Digits(bssid[1]);
-    Serial.print(":");
-    print2Digits(bssid[0]);
-  }
-}
-
-void printEncryptionType(int thisType) {
-  // read the encryption type and print out the name:
-  switch (thisType) {
-    case ENC_TYPE_WEP:
-      if (DEBUG) {
-        Serial.print("WEP");
-      }
-      break;
-    case ENC_TYPE_TKIP:
-      if (DEBUG) {
-        Serial.print("WPA");
-      }
-      break;
-    case ENC_TYPE_CCMP:
-      if (DEBUG) {
-        Serial.print("WPA2");
-      }
-      break;
-    case ENC_TYPE_NONE:
-      if (DEBUG) {
-        Serial.print("None");
-      }
-      break;
-    case ENC_TYPE_AUTO:
-      if (DEBUG) {
-        Serial.print("Auto");
-      }
-      break;
-  }
-}
-
-void print2Digits(byte thisByte) {
-  if (thisByte < 0xF) {
-    if (DEBUG) {
-      Serial.print("0");
-    }
-  }
-  if (DEBUG) {
-    Serial.print(thisByte, HEX);
-  }
-}
 
 

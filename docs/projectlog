@@ -389,4 +389,19 @@ With the basic components for UI and processor, I can start prototyping the humi
 	upAction()
 		alternate button color to blue or red
 
-	Next Steps: integrate code from TouchScreenEvtMgrTest into DewPointDetector to begin menu and set up of wifi work				
+	Next Steps: integrate code from TouchScreenEvtMgrTest into DewPointDetector to begin menu and set up of wifi work
+
+5/6/2017
+	setup() now includes
+		serial screen setup
+		TouchScreen initialization
+		TFT initialization
+		SD card initialization
+		Thermopile TMP007 sensor initialization
+		Humidity-temp (DHT11) sensor initialization
+
+	remove WiFi from set up since it requires some user interaction so it needs to be moved to the event manager loop
+	loop contains specific sensor read outs and delay code, replace by event manager delays
+	requirement: allow readings to be taken without wifi connectivity, saving to SD card
+	requirement: allow user to set date and time if wifi connection is not present
+	requirement: once wifi is initialized, set date time from NTP service				
