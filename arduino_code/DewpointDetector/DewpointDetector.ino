@@ -23,6 +23,9 @@
  * unit, including display of the three measures in 
  * real time.
  *******************************************************/
+// Event Manager declarations
+#include "EventManager.h"
+#define DEBUG 1
 
 // Humidity-Temperature Sensor declarations
 #include <Adafruit_Sensor.h>
@@ -100,79 +103,104 @@ Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 Adafruit_STMPE610 ts = Adafruit_STMPE610(STMPE_CS);
 DHT_Unified dht(DHTPIN, DHTTYPE);
 Adafruit_TMP007 tmp007; //Start with the default i2c address 0x40
+EventManager gEM;
 
 uint32_t delayMS;
 
 void setup() {
-  Serial.begin(115200);
-  delay(10);
+  if (DEBUG) {
+    Serial.begin(115200);
+    while (!Serial) {
+    ; // wait for serial port to connect. Needed for native USB port only
+    }
   Serial.println("DewpointDetector 1.0");
-
   Serial.println("Starting touchscreen controller.");
-  if (!ts.begin()) {
-    Serial.println("Couldn't start touchscreen controller.");
-    while (1);
   }
-  Serial.println("Touchscreen started.");
-
-  Serial.println("Starting TFT device.");
+  if (!ts.begin()) {
+    if (DEBUG) {
+      Serial.println("Couldn't start touchscreen controller.");
+    }
+    while (1); 
+  }
+  if (DEBUG) {
+    Serial.println("Touchscreen started.");
+    Serial.println("Starting TFT device.");
+  }
   tft.begin();
   tft.fillScreen(ILI9341_RED);
   tft.setRotation(3);
   tft.fillRect(10, 10, 300, 220, ILI9341_BLACK);
-  Serial.println("Yielding.");
   yield();
-  Serial.println("Started Touch Screen and Screen Driver.");
-  Serial.print("Starting SD card.");
-  if (!SD.begin(SD_CS)) {
-    Serial.println("SD card start failed!");
+  if (DEBUG) {
+    Serial.println("Started Touch Screen and Screen Driver.");
+    Serial.print("Starting SD card.");
   }
-  Serial.println("SD cart started.");
+  if (!SD.begin(SD_CS)) {
+    if (DEBUG) {
+      Serial.println("SD card start failed!");  
+    }
+  }
+  if (DEBUG) {
+    Serial.println("SD cart started.");
+  }
 
   // you can also use tmp007.begin(TMP007_CFG_1SAMPLE) or 2SAMPLE/4SAMPLE/8SAMPLE to have
   // lower precision, higher rate sampling. default is TMP007_CFG_16SAMPLE which takes
   // 4 seconds per reading (16 samples)
-  Serial.println("Starting thermopile tmp007 sensor.");
+  if (DEBUG) {
+    Serial.println("Starting thermopile tmp007 sensor.");
+  }
   if (! tmp007.begin()) {
-    Serial.println("No thermopile sensor found");
+    if (DEBUG) {
+      Serial.println("No thermopile sensor found");
+    }
     while (1);
   }
-  Serial.println("Thermopile tmp007 sensor started.");
-
-  Serial.println("Starting Humidity-temp sensor DHT-11.");
+  if (DEBUG) {
+    Serial.println("Thermopile tmp007 sensor started.");
+    Serial.println("Starting Humidity-temp sensor DHT-11.");
+  }
   dht.begin(); 
   // Print temperature sensor details.
   sensor_t sensor;
   dht.temperature().getSensor(&sensor);
-  Serial.println("------------------------------------");
-  Serial.println("Temperature");
-  Serial.print  ("Sensor:       "); Serial.println(sensor.name);
-  Serial.print  ("Driver Ver:   "); Serial.println(sensor.version);
-  Serial.print  ("Unique ID:    "); Serial.println(sensor.sensor_id);
-  Serial.print  ("Max Value:    "); Serial.print(sensor.max_value); Serial.println(" *C");
-  Serial.print  ("Min Value:    "); Serial.print(sensor.min_value); Serial.println(" *C");
-  Serial.print  ("Resolution:   "); Serial.print(sensor.resolution); Serial.println(" *C");  
-  Serial.println("------------------------------------");
+  if (DEBUG) {
+    Serial.println("------------------------------------");
+    Serial.println("Temperature");
+    Serial.print  ("Sensor:       "); Serial.println(sensor.name);
+    Serial.print  ("Driver Ver:   "); Serial.println(sensor.version);
+    Serial.print  ("Unique ID:    "); Serial.println(sensor.sensor_id);
+    Serial.print  ("Max Value:    "); Serial.print(sensor.max_value); Serial.println(" *C");
+    Serial.print  ("Min Value:    "); Serial.print(sensor.min_value); Serial.println(" *C");
+    Serial.print  ("Resolution:   "); Serial.print(sensor.resolution); Serial.println(" *C");  
+    Serial.println("------------------------------------");
+  }
   // Print humidity sensor details.
   dht.humidity().getSensor(&sensor);
-  Serial.println("------------------------------------");
-  Serial.println("Humidity");
-  Serial.print  ("Sensor:       "); Serial.println(sensor.name);
-  Serial.print  ("Driver Ver:   "); Serial.println(sensor.version);
-  Serial.print  ("Unique ID:    "); Serial.println(sensor.sensor_id);
-  Serial.print  ("Max Value:    "); Serial.print(sensor.max_value); Serial.println("%");
-  Serial.print  ("Min Value:    "); Serial.print(sensor.min_value); Serial.println("%");
-  Serial.print  ("Resolution:   "); Serial.print(sensor.resolution); Serial.println("%");  
-  Serial.println("------------------------------------");
+  if (DEBUG) {
+    Serial.println("------------------------------------");
+    Serial.println("Humidity");
+    Serial.print  ("Sensor:       "); Serial.println(sensor.name);
+    Serial.print  ("Driver Ver:   "); Serial.println(sensor.version);
+    Serial.print  ("Unique ID:    "); Serial.println(sensor.sensor_id);
+    Serial.print  ("Max Value:    "); Serial.print(sensor.max_value); Serial.println("%");
+    Serial.print  ("Min Value:    "); Serial.print(sensor.min_value); Serial.println("%");
+    Serial.print  ("Resolution:   "); Serial.print(sensor.resolution); Serial.println("%");  
+    Serial.println("------------------------------------");
+  }
   // Set delay between sensor readings based on sensor details.
   delayMS = sensor.min_delay / 1000;
 
-  Serial.println("Starting WiFi.");
+  if (DEBUG) {
+    Serial.println("Starting WiFi.");
+  }
   // Configure pins for Adafruit ATWINC1500 Feather
   WiFi.setPins(8,7,4,2);
   // check for the presence of the shield:
   if (WiFi.status() == WL_NO_SHIELD) {
-    Serial.println("WiFi shield not present, halting.");
+    if (DEBUG) {
+      Serial.println("WiFi shield not present, halting.");
+    }
     // don't continue:
     while (true);
   }
@@ -193,9 +221,13 @@ void loop() {
   // Delay between measurements
   delay(delayMS);
   float objt = tmp007.readObjTempC();
-  Serial.print("Object Temperature: "); Serial.print(objt); Serial.print("*C  ");
+  if (DEBUG) {
+    Serial.print("Object Temperature: "); Serial.print(objt); Serial.print("*C  ");
+  }
   float diet = tmp007.readDieTempC();
-  Serial.print("Die Temperature: "); Serial.print(diet); Serial.print("*C  ");
+  if (DEBUG) {
+    Serial.print("Die Temperature: "); Serial.print(diet); Serial.print("*C  ");
+  }
    
   // Reading temperature or humidity takes about 250 milliseconds!
   // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
@@ -203,29 +235,35 @@ void loop() {
   sensors_event_t event;
   dht.temperature().getEvent(&event);
     if (isnan(event.temperature)) {
-    Serial.println("Error reading temperature!");
+    if (DEBUG) {
+      Serial.println("Error reading temperature!");
+    }
   }
   else {
     t = event.temperature;
   }
   dht.humidity().getEvent(&event);
   if (isnan(event.relative_humidity)) {
-    Serial.println("Error reading temperature!");
+    if (DEBUG) {
+      Serial.println("Error reading temperature!");
+    }
   }
   else {
     h = event.relative_humidity;
   }
   d = dewpointC(t, h);
 
-  Serial.print("Humidity: ");
-  Serial.print(h);
-  Serial.print(" %\t");
-  Serial.print("Temperature: ");
-  Serial.print(t);
-  Serial.print(" *C ");
-  Serial.print("Dewpoint temp: ");
-  Serial.print(d);
-  Serial.println(" *C ");
+  if (DEBUG) {
+    Serial.print("Humidity: ");
+    Serial.print(h);
+    Serial.print(" %\t");
+    Serial.print("Temperature: ");
+    Serial.print(t);
+    Serial.print(" *C ");
+    Serial.print("Dewpoint temp: ");
+    Serial.print(d);
+    Serial.println(" *C ");
+  } 
 
   displayData(h, t, objt, d);
 
@@ -285,95 +323,121 @@ void printMacAddress() {
 
   // print your MAC address:
   WiFi.macAddress(mac);
-  Serial.print("MAC: ");
-  print2Digits(mac[5]);
-  Serial.print(":");
-  print2Digits(mac[4]);
-  Serial.print(":");
-  print2Digits(mac[3]);
-  Serial.print(":");
-  print2Digits(mac[2]);
-  Serial.print(":");
-  print2Digits(mac[1]);
-  Serial.print(":");
-  print2Digits(mac[0]);
+  if (DEBUG) {
+    Serial.print("MAC: ");
+    print2Digits(mac[5]);
+    Serial.print(":");
+    print2Digits(mac[4]);
+    Serial.print(":");
+    print2Digits(mac[3]);
+    Serial.print(":");
+    print2Digits(mac[2]);
+    Serial.print(":");
+    print2Digits(mac[1]);
+    Serial.print(":");
+    print2Digits(mac[0]);
+  }
 }
 
 void listNetworks() {
   // scan for nearby networks:
-  Serial.println("** Scan Networks **");
+  if (DEBUG) {
+    Serial.println("** Scan Networks **");
+  }
   int numSsid = WiFi.scanNetworks();
   if (numSsid == -1)
   {
-    Serial.println("Couldn't get a WiFi connection");
+    if (DEBUG) {
+      Serial.println("Couldn't get a WiFi connection");
+    }
     while (true);
   }
 
   // print the list of networks seen:
-  Serial.print("number of available networks: ");
-  Serial.println(numSsid);
-
+  if (DEBUG) {
+    Serial.print("number of available networks: ");
+    Serial.println(numSsid);
+  }
+  
   // print the network number and name for each network found:
   for (int thisNet = 0; thisNet < numSsid; thisNet++) {
-    Serial.print(thisNet + 1);
-    Serial.print(") ");
-    Serial.print("Signal: ");
-    Serial.print(WiFi.RSSI(thisNet));
-    Serial.print(" dBm");
-    Serial.print("\tChannel: ");
-    Serial.print(WiFi.channel(thisNet));
-    byte bssid[6];
-    Serial.print("\t\tBSSID: ");
-    printBSSID(WiFi.BSSID(thisNet, bssid));
-    Serial.print("\tEncryption: ");
-    printEncryptionType(WiFi.encryptionType(thisNet));
-    Serial.print("\t\tSSID: ");
-    Serial.println(WiFi.SSID(thisNet));
-    Serial.flush();
+    if (DEBUG) {
+      Serial.print(thisNet + 1);
+      Serial.print(") ");
+      Serial.print("Signal: ");
+      Serial.print(WiFi.RSSI(thisNet));
+      Serial.print(" dBm");
+      Serial.print("\tChannel: ");
+      Serial.print(WiFi.channel(thisNet));
+      byte bssid[6];
+      Serial.print("\t\tBSSID: ");
+      printBSSID(WiFi.BSSID(thisNet, bssid));
+      Serial.print("\tEncryption: ");
+      printEncryptionType(WiFi.encryptionType(thisNet));
+      Serial.print("\t\tSSID: ");
+      Serial.println(WiFi.SSID(thisNet));
+      Serial.flush();
+    }
   }
   Serial.println();
 }
 
 void printBSSID(byte bssid[]) {
-  print2Digits(bssid[5]);
-  Serial.print(":");
-  print2Digits(bssid[4]);
-  Serial.print(":");
-  print2Digits(bssid[3]);
-  Serial.print(":");
-  print2Digits(bssid[2]);
-  Serial.print(":");
-  print2Digits(bssid[1]);
-  Serial.print(":");
-  print2Digits(bssid[0]);
+  if (DEBUG) {
+    print2Digits(bssid[5]);
+    Serial.print(":");
+    print2Digits(bssid[4]);
+    Serial.print(":");
+    print2Digits(bssid[3]);
+    Serial.print(":");
+    print2Digits(bssid[2]);
+    Serial.print(":");
+    print2Digits(bssid[1]);
+    Serial.print(":");
+    print2Digits(bssid[0]);
+  }
 }
 
 void printEncryptionType(int thisType) {
   // read the encryption type and print out the name:
   switch (thisType) {
     case ENC_TYPE_WEP:
-      Serial.print("WEP");
+      if (DEBUG) {
+        Serial.print("WEP");
+      }
       break;
     case ENC_TYPE_TKIP:
-      Serial.print("WPA");
+      if (DEBUG) {
+        Serial.print("WPA");
+      }
       break;
     case ENC_TYPE_CCMP:
-      Serial.print("WPA2");
+      if (DEBUG) {
+        Serial.print("WPA2");
+      }
       break;
     case ENC_TYPE_NONE:
-      Serial.print("None");
+      if (DEBUG) {
+        Serial.print("None");
+      }
       break;
     case ENC_TYPE_AUTO:
-      Serial.print("Auto");
+      if (DEBUG) {
+        Serial.print("Auto");
+      }
       break;
   }
 }
 
 void print2Digits(byte thisByte) {
   if (thisByte < 0xF) {
-    Serial.print("0");
+    if (DEBUG) {
+      Serial.print("0");
+    }
   }
-  Serial.print(thisByte, HEX);
+  if (DEBUG) {
+    Serial.print(thisByte, HEX);
+  }
 }
 
 

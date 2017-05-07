@@ -387,4 +387,6 @@ With the basic components for UI and processor, I can start prototyping the humi
 	downAction()
 		change button to yellow
 	upAction()
-		alternate button color to blue or red				
+		alternate button color to blue or red
+
+	Next Steps: integrate code from TouchScreenEvtMgrTest into DewPointDetector to begin menu and set up of wifi work				
