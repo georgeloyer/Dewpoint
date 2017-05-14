@@ -148,7 +148,7 @@ void setup() {
   lastSensorTime = millis();                // time in millis since the last sensor reading
   sensorTimerSecs = 10;                     // time in seconds between sensor readings
   if (sdAvailable = startSdFat()) {         // initialize the SD card
-    fullPathLogFile = setupLogFile();
+    fullPathLogFile = setupLogFile();       // set the path and name of the log file
   }
   // setup listeners for EventManager
   gEM.addListener(EventManager::kEventUser0, listenerSensorTimer); // Sensor timer listener

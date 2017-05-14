@@ -450,7 +450,7 @@ With the basic components for UI and processor, I can start prototyping the humi
 		else	return false
 		
 	String setupLogFile()
-		set folderName
+		set folderName, pattern is /datalog/dlogNNN
 		if (no log files exist)
 			set logFile = dewpt001.log and create the file
 		else
