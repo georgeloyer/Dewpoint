@@ -46,6 +46,7 @@ void listenerSensorTimer (int eventCode, int eventParam) {
   } 
 
   displayData(h, t, objt, d);
+  fullPathLogFile = writeToLogFile(fullPathLogFile, "time", h, t, objt, d, 1);
 
 }
 

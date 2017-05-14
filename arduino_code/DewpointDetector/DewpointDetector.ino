@@ -55,7 +55,7 @@
 // TFT screen and graphics library declarations
 #include <Adafruit_GFX.h>    // Core graphics library
 #include <Adafruit_ILI9341.h> // Hardware-specific library
-#include <SD.h>
+#include "SdFat.h"
 #include <Adafruit_STMPE610.h>
 
 // CPU macro setup of pins for TFT screen
@@ -98,17 +98,38 @@
 
 #define PENRADIUS 3
 
+// Set USE_SDIO to zero for SPI card access. 
+#define USE_SDIO 0
+/*
+ * SD chip select pin.  Common values are:
+ *
+ * Arduino Ethernet shield, pin 4.
+ * SparkFun SD shield, pin 8.
+ * Adafruit SD shields and modules, pin 10.
+ * Default SD chip select is the SPI SS pin.
+ */
+const uint8_t SD_CHIP_SELECT = SD_CS;
+#if USE_SDIO
+// Use faster SdioCardEX
+SdFatSdioEX sd;
+// SdFatSdio sd;
+#else // USE_SDIO
+SdFat sd;
+#endif  // USE_SDIO
+
 // instantiate instances of each object type
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 Adafruit_STMPE610 ts = Adafruit_STMPE610(STMPE_CS);
 DHT_Unified dht(DHTPIN, DHTTYPE);
-Adafruit_TMP007 tmp007; //Start with the default i2c address 0x40
-EventManager gEM;
-sensors_event_t event;
-float t, h, d, objt, diet;
-unsigned long lastSensorTime, rightNow;
+Adafruit_TMP007 tmp007;                   //Start with the default i2c address 0x40
+EventManager gEM;                         // global for event manager
+sensors_event_t event;                    //global for event manager
+float t, h, d, objt, diet;                // globals for sensors: temp, humidity, dewpoint temp, object temp and die temp
+unsigned long lastSensorTime, rightNow;   //globals for last time sensors were read and the current time
 int sensorTimerSecs;
-uint32_t delayMS;
+String fullPathLogFile;                   //global containing full path name of current log file
+boolean sdAvailable;                      //global for indicating whether SD card is available
+uint32_t cardSize;                        //global for card size
 
 void setup() {
   if (DEBUG) {
@@ -116,90 +137,33 @@ void setup() {
     while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
     }
-  Serial.println("DewpointDetector 1.0");
-  Serial.println("Starting touchscreen controller.");
-  }
-  if (!ts.begin()) {
-    if (DEBUG) {
-      Serial.println("Couldn't start touchscreen controller.");
-    }
-    while (1); 
   }
   if (DEBUG) {
-    Serial.println("Touchscreen started.");
-    Serial.println("Starting TFT device.");
-  }
-  tft.begin();
-  tft.fillScreen(ILI9341_RED);
-  tft.setRotation(3);
-  tft.fillRect(10, 10, 300, 220, ILI9341_BLACK);
-  yield();
-  if (DEBUG) {
-    Serial.println("Started Touch Screen and Screen Driver.");
-    Serial.print("Starting SD card.");
-  }
-  if (!SD.begin(SD_CS)) {
-    if (DEBUG) {
-      Serial.println("SD card start failed!");  
-    }
-  }
-  if (DEBUG) {
-    Serial.println("SD cart started.");
+    Serial.println("DewpointDetector 1.0");
   }
 
-  // you can also use tmp007.begin(TMP007_CFG_1SAMPLE) or 2SAMPLE/4SAMPLE/8SAMPLE to have
-  // lower precision, higher rate sampling. default is TMP007_CFG_16SAMPLE which takes
-  // 4 seconds per reading (16 samples)
-  if (DEBUG) {
-    Serial.println("Starting thermopile tmp007 sensor.");
+  startTouchScreen();                       // starts touch screen, TFT and SD card drivers
+  startTMP007();                            // starts thermopile sensor
+  startDHT22();                             // starts humidity-temperature sensor
+  lastSensorTime = millis();                // time in millis since the last sensor reading
+  sensorTimerSecs = 10;                     // time in seconds between sensor readings
+  if (sdAvailable = startSdFat()) {         // initialize the SD card
+    fullPathLogFile = setupLogFile();
   }
-  if (! tmp007.begin()) {
-    if (DEBUG) {
-      Serial.println("No thermopile sensor found");
-    }
-    while (1);
-  }
-  if (DEBUG) {
-    Serial.println("Thermopile tmp007 sensor started.");
-    Serial.println("Starting Humidity-temp sensor DHT-11.");
-  }
-  dht.begin(); 
-  // Print temperature sensor details.
-  sensor_t sensor;
-  dht.temperature().getSensor(&sensor);
-  if (DEBUG) {
-    Serial.println("------------------------------------");
-    Serial.println("Temperature");
-    Serial.print  ("Sensor:       "); Serial.println(sensor.name);
-    Serial.print  ("Driver Ver:   "); Serial.println(sensor.version);
-    Serial.print  ("Unique ID:    "); Serial.println(sensor.sensor_id);
-    Serial.print  ("Max Value:    "); Serial.print(sensor.max_value); Serial.println(" *C");
-    Serial.print  ("Min Value:    "); Serial.print(sensor.min_value); Serial.println(" *C");
-    Serial.print  ("Resolution:   "); Serial.print(sensor.resolution); Serial.println(" *C");  
-    Serial.println("------------------------------------");
-  }
-  // Print humidity sensor details.
-  dht.humidity().getSensor(&sensor);
-  if (DEBUG) {
-    Serial.println("------------------------------------");
-    Serial.println("Humidity");
-    Serial.print  ("Sensor:       "); Serial.println(sensor.name);
-    Serial.print  ("Driver Ver:   "); Serial.println(sensor.version);
-    Serial.print  ("Unique ID:    "); Serial.println(sensor.sensor_id);
-    Serial.print  ("Max Value:    "); Serial.print(sensor.max_value); Serial.println("%");
-    Serial.print  ("Min Value:    "); Serial.print(sensor.min_value); Serial.println("%");
-    Serial.print  ("Resolution:   "); Serial.print(sensor.resolution); Serial.println("%");  
-    Serial.println("------------------------------------");
-  }
-  // Set delay between sensor readings based on sensor details.
-  delayMS = sensor.min_delay / 1000;
-  lastSensorTime = millis();  // time in millis since the last sensor reading
-  sensorTimerSecs = 10;                 // time in seconds between sensor readings
+  // setup listeners for EventManager
   gEM.addListener(EventManager::kEventUser0, listenerSensorTimer); // Sensor timer listener
   if (DEBUG) {
     Serial.print( "Number of listeners: " );
     Serial.println( gEM.numListeners() );
   }
+}
+
+void loop() {
+  // Handle any events in the queue
+  gEM.processEvent();
+  createSensorTimerEvents();
+}
+
 
 /*
   if (DEBUG) {
@@ -225,13 +189,4 @@ void setup() {
   //chooseNetwork();
   //requestSend();
 */
-}
-
-void loop() {
-  // Handle any events in the queue
-  gEM.processEvent();
-  createSensorTimerEvents();
-}
-
-
 

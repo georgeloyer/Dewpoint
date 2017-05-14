@@ -22,3 +22,4 @@ rsync -azvt /Users/gloyer/Documents/Arduino/libraries/Adafruit-_ILI9341 /Users/g
 rsync -azvt /Users/gloyer/Documents/Arduino/libraries/Adafruit-GFX-Library /Users/gloyer/Documents/Projects/Dewpoint/arduino_libs
 rsync -azvt /Users/gloyer/Documents/Arduino/libraries/Adafruit_SSD1306 /Users/gloyer/Documents/Projects/Dewpoint/arduino_libs
 rsync -azvt /Users/gloyer/Documents/Arduino/libraries/EventManager /Users/gloyer/Documents/Projects/Dewpoint/arduino_libs
+rsync -azvt /Users/gloyer/Documents/Arduino/libraries/SdFat /Users/gloyer/Documents/Projects/Dewpoint/arduino_libs

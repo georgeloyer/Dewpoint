@@ -393,15 +393,103 @@ With the basic components for UI and processor, I can start prototyping the humi
 
 5/6/2017
 	setup() now includes
-		serial screen setup
-		TouchScreen initialization
-		TFT initialization
-		SD card initialization
+		serial terminal setup
+		TouchScreen TFT SD initialization
 		Thermopile TMP007 sensor initialization
 		Humidity-temp (DHT11) sensor initialization
 
-	remove WiFi from set up since it requires some user interaction so it needs to be moved to the event manager loop
-	loop contains specific sensor read outs and delay code, replace by event manager delays
+	remove WiFi from set up since it requires some user interaction so it needs to be moved to the event manager loop - COMPLETE
+	loop contains specific sensor read outs and delay code, replace by event manager delays - COMPLETE
 	requirement: allow readings to be taken without wifi connectivity, saving to SD card
 	requirement: allow user to set date and time if wifi connection is not present
-	requirement: once wifi is initialized, set date time from NTP service				
+	requirement: once wifi is initialized, set date time from NTP service	
+
+	SD card library
+	https://www.arduino.cc/en/reference/SD
+	Requirements:
+		1. use 8 char filenames, max
+		2. store data log folders in /datalog folder on SD card. Create the directory if it does not exist.
+		3. store data log files in sub folders of /datalog named /dlogNNN
+		4. store data in log files with the pattern dewptNN.log
+		5. continue writing to the same log file until it is more than 100KB in size
+		6. After a file is greater than 100K in size, start a new log file with the next number in sequence
+			max size of data is determined by the size of the space allocated on the SD card, by default 80% of the volume
+			If the log file sequence numbers reach 99, then 
+				If disk is < 80% full then
+					create folder NN+1
+					create file dewpt01.log in /datalog/dlogNNN
+				else 
+					chdir to dlog001
+					if dewpt01.log exists, delete file 
+					open dewpt01.log and begin writing to it
+			else
+				set logFile to dewptNN+1
+		7. On restart, latest logFile must be findable in a short time.
+			store the current logFile full path in /datalog/currLog.txt
+		8. File format must be columns tab delimited:
+			Excel compliant date and time
+			Humidity
+			Ambient Temperature
+			Mirror Temperature
+			Dewpoint Temperature
+			Heater state
+		9. If there is no SD card, continue to display data on screen, continue to write to IOT API. Fail gracefully, in other words.
+		10. Track file size and active log file in DEBUG information	
+
+	boolean startSdFat()
+		if cardBegin and sdFreeSpace
+			return true
+		else 
+			return false
+
+	boolean sdFreeSpace()
+		get the total cluster count
+		get the free cluster count
+		if card is <80% full
+			return true
+		else	return false
+		
+	String setupLogFile()
+		set folderName
+		if (no log files exist)
+			set logFile = dewpt001.log and create the file
+		else
+			Find the last logFile with the dewptNNN.log pattern
+		if the size of the logFile > 1MB rollLogFile
+		return logFile
+
+	String writeToLogFile (logFile, time, humidity, temperature, mirrorTemp, dewpointTemp, heaterStatus)
+		if logFile doesn’t exist
+			setupLogFile
+		open logFile
+		create the logString
+		write the logString to logFile
+		check logFile size and if it exceeds 1MB, rollLogFile
+		return logFile
+
+	String rollLogFile(logFile)
+		get NNN from logFile
+		if NNN == 999
+			set logFile = dewpt001.log
+		else set logFile = dewpt(nnn+1).log
+		if logFile exists delete logFile
+		create logFile
+		if DEBUG serial.print rollover event
+		return logFile	
+	String splitPath(String fullpathname)
+	String splitFileName(String fullpathname)
+	void cleanupLogFiles()
+
+	Next: tests, performance testing	
+
+5/12/2017  My mother, Dorothy Gene Loyer (nee Bucy) died today. Rest in peace, Mom.
+
+5/13/2017
+	Found that there were missing needed functions in the SD library included with the Arduino IDE and that the author of
+	that library had continued to develop and improve the functionality, but those changes are not included in the SD
+	library. Instead, he’s provided the SdFat library. https://github.com/greiman/SdFat
+
+	This version of the library includes a complete documentation set in the library folders in HTML format plus an extensive
+	set of examples. It includes all of the functionality of the SD library. Functions that go beyond SD are VolumeFreeSpace and
+	the use of more complex (windows-like) file names, instead of being limited to 8 characters plus a 3 character suffix.
+
