@@ -424,7 +424,7 @@ With the basic components for UI and processor, I can start prototyping the humi
 					open dewpt01.log and begin writing to it
 			else
 				set logFile to dewptNN+1
-		7. On restart, latest logFile must be findable in a short time.
+		X. On restart, latest logFile must be findable in a short time.
 			store the current logFile full path in /datalog/currLog.txt
 		8. File format must be columns tab delimited:
 			Excel compliant date and time
@@ -451,31 +451,38 @@ With the basic components for UI and processor, I can start prototyping the humi
 		
 	String setupLogFile()
 		set folderName, pattern is /datalog/dlogNNN
+		if no dlog folder exists, create dlog001 
 		if (no log files exist)
-			set logFile = dewpt001.log and create the file
+			create dewpt01.log
 		else
-			Find the last logFile with the dewptNNN.log pattern
-		if the size of the logFile > 1MB rollLogFile
-		return logFile
+			Find the last file with the dewptNN.log pattern
+		return full path name of log file
 
 	String writeToLogFile (logFile, time, humidity, temperature, mirrorTemp, dewpointTemp, heaterStatus)
 		if logFile doesn’t exist
 			setupLogFile
 		open logFile
+		if logFile size > 100K 
+			rollLogFile
+			open new logFile
 		create the logString
 		write the logString to logFile
-		check logFile size and if it exceeds 1MB, rollLogFile
-		return logFile
+		return logFile (because it could have changed)
 
 	String rollLogFile(logFile)
-		get NNN from logFile
-		if NNN == 999
-			set logFile = dewpt001.log
-		else set logFile = dewpt(nnn+1).log
-		if logFile exists delete logFile
-		create logFile
+		get NN from logFile
+		if NN == 99
+			get NNN from logFolder
+			set logFolder = NNN + 1
+			set logFile = dewpt01.log
+			fullPathLogFile = “/datalog/“ + logFolder + “/“ + logFile
+		else 
+			set logFile = NN+1
+			fullPathLogFile = fullPathLogFile.substring(1,17) + logFile
+		if fullPathLogFile exists delete fullPathLogFile
 		if DEBUG serial.print rollover event
-		return logFile	
+		return fullPathLogFile
+	
 	String splitPath(String fullpathname)
 	String splitFileName(String fullpathname)
 	void cleanupLogFiles()

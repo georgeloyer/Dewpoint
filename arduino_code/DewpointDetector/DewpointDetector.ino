@@ -25,6 +25,7 @@
  *******************************************************/
 // Event Manager declarations
 #include "EventManager.h"
+#include "dewLog.h"
 #define DEBUG 1
 
 // Humidity-Temperature Sensor declarations
@@ -124,6 +125,7 @@ DHT_Unified dht(DHTPIN, DHTTYPE);
 Adafruit_TMP007 tmp007;                   //Start with the default i2c address 0x40
 EventManager gEM;                         // global for event manager
 sensors_event_t event;                    //global for event manager
+DewLog dewlog;                            // struct containing dew logging data
 float t, h, d, objt, diet;                // globals for sensors: temp, humidity, dewpoint temp, object temp and die temp
 unsigned long lastSensorTime, rightNow;   //globals for last time sensors were read and the current time
 int sensorTimerSecs;

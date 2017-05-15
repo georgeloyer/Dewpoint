@@ -46,7 +46,18 @@ void listenerSensorTimer (int eventCode, int eventParam) {
   } 
 
   displayData(h, t, objt, d);
-  fullPathLogFile = writeToLogFile(fullPathLogFile, "time", h, t, objt, d, 1);
 
+  // build log struct
+  dewlog.fullPathLogFile = fullPathLogFile; 
+  dewlog.dateTime = "2107-05-14 10:57:45";
+  dewlog.humidity = h;
+  dewlog.temperature = t;
+  dewlog.mirrorTemp = objt;
+  dewlog.dewpointTemp = d;
+  dewlog.heaterStatus = false;
+   
+  fullPathLogFile = writeToLogFile(dewlog);
+
+  return;
 }
 
