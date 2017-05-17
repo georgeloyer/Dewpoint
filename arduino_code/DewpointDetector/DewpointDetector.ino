@@ -127,7 +127,8 @@ EventManager gEM;                         // global for event manager
 sensors_event_t event;                    //global for event manager
 DewLog dewlog;                            // struct containing dew logging data
 float t, h, d, objt, diet;                // globals for sensors: temp, humidity, dewpoint temp, object temp and die temp
-unsigned long lastSensorTime, rightNow;   //globals for last time sensors were read and the current time
+unsigned long rightNow;                   //global for the current time
+unsigned long nextSensorTime;             // global for next sensor time
 int sensorTimerSecs;
 String fullPathLogFile;                   //global containing full path name of current log file
 boolean sdAvailable;                      //global for indicating whether SD card is available
@@ -147,8 +148,9 @@ void setup() {
   startTouchScreen();                       // starts touch screen, TFT and SD card drivers
   startTMP007();                            // starts thermopile sensor
   startDHT22();                             // starts humidity-temperature sensor
-  lastSensorTime = millis();                // time in millis since the last sensor reading
   sensorTimerSecs = 10;                     // time in seconds between sensor readings
+  nextSensorTime = (unsigned long)millis() + sensorTimerSecs*1000;                
+                                            // time in millis until the next sensor reading
   if (sdAvailable = startSdFat()) {         // initialize the SD card
     fullPathLogFile = setupLogFile();       // set the path and name of the log file
   }

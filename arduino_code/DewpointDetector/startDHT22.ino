@@ -1,3 +1,13 @@
+/*
+ * startDHT22()
+ * History:
+ * 2017-05    gel Original
+ * 2017-05-17 gel TODO: make return type boolean and check return status of begin() method so we report in logging when
+ *                this function is not operating.
+ * 
+ * sets up the DHT22 sensor and logs the temp and humidity configuration stored on the sensor
+ * 
+ */
 void startDHT22() {
   if (DEBUG) {
     Serial.println("Starting Humidity-temp sensor DHT-11.");

@@ -1,5 +1,10 @@
 /*
  * writeToLogFile(DewLog dewlog)
+ * History: 
+ * 2017-05    gel Original
+ * 2017-05-17 gel TODO: consider revising population of log line from dewlog struct to include data validation for specific
+ *                values in the data set. This could also be done in the method calling.
+ *                TODO: consider an alternative error return code (second return value) for the multiple causes of a log write failure.
  * 
  * Opens log file, returns null string if it fails.
  * Checks log file size, if it's greater than 100KB, closes it and opens a new one (using rollLogFile())

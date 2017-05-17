@@ -1,4 +1,11 @@
-// Sensor Timer Listener
+/*
+ * listenerSensorTimer(int, int)
+ * 
+ * Sensor Timer Listener is a listener on the Event Queue for specific events signalling
+ * that it's time for a sensor read out, including display on the TFT screen, writing the
+ * data to the IOT service, and logging locally to the SD card
+ */
+ 
 void listenerSensorTimer (int eventCode, int eventParam) {
   // read the TMP007 thermopile sensor
   objt = tmp007.readObjTempC();
@@ -45,6 +52,7 @@ void listenerSensorTimer (int eventCode, int eventParam) {
     Serial.println(" *C ");
   } 
 
+  // write data to the TFT display
   displayData(h, t, objt, d);
 
   // build log struct
@@ -56,6 +64,10 @@ void listenerSensorTimer (int eventCode, int eventParam) {
   dewlog.dewpointTemp = d;
   dewlog.heaterStatus = false;
    
+  // write data to the IOT service
+  // sendDataIot(dewlog);
+
+  // write data to the SD card log
   fullPathLogFile = writeToLogFile(dewlog);
 
   return;

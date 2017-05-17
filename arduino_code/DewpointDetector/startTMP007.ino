@@ -1,3 +1,13 @@
+/*
+ * startTMP007()
+ * History:
+ * 2017-05-12 gel Original
+ * 2017-05-16 gel TODO: make it boolean and return true on correct startup, false on failure
+ *                allow calling program to gracefully continue working, while reporting failure 
+ *                of the sensor. Also could re-try multiple times in order to self-heal.
+ * 
+ * starts up the thermopile TMP007 sensor. Hangs if it fails to start up.
+ */
 void startTMP007() { 
   // you can also use tmp007.begin(TMP007_CFG_1SAMPLE) or 2SAMPLE/4SAMPLE/8SAMPLE to have
   // lower precision, higher rate sampling. default is TMP007_CFG_16SAMPLE which takes

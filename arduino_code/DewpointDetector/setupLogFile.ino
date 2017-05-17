@@ -2,6 +2,9 @@
  * setupLogFile()
  * History: 
  *  2017-05 gel Original version
+ *  2017-05-16 gel  TODO: revise to include current.txt file in /datalog folder containing the path of the current log file, 
+ *                  initialized by setupLogFile() and updated by rollLogFile(). Handle edge cases (check for evidence that 
+ *                  the value stored in current.txt is not accurate).
  *  
  * returns a string with the full path of the log file, including the name
  * 

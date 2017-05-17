@@ -1,3 +1,9 @@
+/*
+ * listNetworks()
+ * 
+ * prints a list of networks for user choice on which to connect to
+ */
+
 void listNetworks() {
   // scan for nearby networks:
   if (DEBUG) {

@@ -483,8 +483,6 @@ With the basic components for UI and processor, I can start prototyping the humi
 		if DEBUG serial.print rollover event
 		return fullPathLogFile
 	
-	String splitPath(String fullpathname)
-	String splitFileName(String fullpathname)
 	void cleanupLogFiles()
 
 	Next: tests, performance testing	
@@ -500,3 +498,67 @@ With the basic components for UI and processor, I can start prototyping the humi
 	set of examples. It includes all of the functionality of the SD library. Functions that go beyond SD are VolumeFreeSpace and
 	the use of more complex (windows-like) file names, instead of being limited to 8 characters plus a 3 character suffix.
 
+5/16/2017
+	Completed all of the methods for SD logging. 
+	Testing plans.
+		float CtoF(float) - test a range of conversions from -20 to +50 and print a table of C and F temperatures. Validate with a 
+			printed version of the table from manual conversions.
+		void createSensorTimerEvents() - no tests to run
+		float dewpointC(float c, float h) - test a cross tab of values across C and H and print the table compared to a manually
+			calculated table.
+		void displayData(float h, float t, float o, float d) - no test
+		void drawAppScreen() - no test
+		void listNetworks() - test with wifi
+		void listenerSensorTimer (int eventCode, int eventParam) - performance run without any errors in reading the sensors
+		void print2Digits(byte thisByte) - provided library, no test
+		void printBSSID(byte bssid[]) - provided library, no test
+		void printEncryptionType(int thisType) - provided library, no test
+		void printMacAddress() - provided library, no test
+		String rollLogFile (String fullPathLogFile) - 
+			1. test for correct rotation of log files through a full cycle, but shorten the cycle by making the max size of log file 10K 
+			2. test one digit and two digit log file names, and one, two and three digit log folder names; 
+			3. rollover to new folders; 
+			4. rollover from the max folder and max log file numbers; 
+			5. correct handling of full roll over; 
+			6. correct file and path name generation.  
+			7. Run the program and interrupt it from time to time before a full cycle completes, and examine the folder and file
+			structure on the SD card.
+			8. Let the program run through multiple cycles and examine the timestamps of the files and folders to validate correct
+			operation.
+		boolean sdFreeSpace()
+			1. write to the SD card to fill it 40% full and then increments of 5% more each iteration
+			2. validate that correct boolean result returns up to disk 95% full
+			3. reformat the SD drive
+		String setupLogFile()
+			1. returns a correct data log file name when no files are on the disk
+			1a. creates the first folder and file
+			2. returns a correct data log file name when there are varying numbers of folders and log files in them
+			2a. 5 folders, 67 log files
+			2b. 21 folders, 99 log files
+			2c. 167 folders, 3 log files
+			2d. 989 folders, 44 log files
+			2e. record the time of each run to serve as a performance test for start up after power loss
+			3. returns a correct data log file when all 999 folders are present (logs are rotating through 999 folders x 99 files each
+		String writeToLogFile(DewLog dewlog)
+			1. Validate failure to open log file
+			2. Validate write to log file if it is less than limit (100KB)
+			3. Validate rollLogFile is called if file size is>= 100KB
+			4. Validate failure to open new log file
+			5. Validate correct write of data from dewlog struct
+			6. Validate failure to write line to log file due to file missing
+			7. Validate failure to write full line to log file
+		void startDHT22()
+			1. correct start up of DHT22
+			2. correct return code when DHT22 fails to start (by disconnecting circuit)
+		boolean startSdFat()
+			1. test operation SD card not present
+			2. test operation with SD card more than 80% full
+		void startTMP007()
+			1. correct start up of TMP007
+			2. correct return code when TMP007 fails to start (by disconnecting circuit)
+		void startTouchScreen()
+			1. correct start up of TS
+			2. correct start up of TFT
+			3. correct return code when TS fails to start
+			4. correct return code when TFT fails to start
+			5. correct return code when both TS and TFT fail to start

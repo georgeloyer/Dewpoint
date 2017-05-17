@@ -1,7 +1,10 @@
-// Calculate the dewpoint given temperature in Centigrade
-//  and percent humidity. Returns the dewpoint temperature
-//  in Centigrade.
-
+/* 
+ * dewpoint(float, float)
+ * 
+ * Calculate the dewpoint given temperature in Centigrade
+ * and percent humidity. Returns the dewpoint temperature
+ * in Centigrade.
+ */
 float dewpointC(float c, float h) {
   float d, es, e;
 
