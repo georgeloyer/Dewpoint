@@ -38,7 +38,7 @@ String writeToLogFile(DewLog dewlog) {
 
     // open the new log file
       if (DEBUG) {
-        String errString = "Error: Failed to open log file: " + dewlog.fullPathLogFile;
+        String errString = "Error: Failed to open NEW log file: " + dewlog.fullPathLogFile;
         Serial.println(errString);
       }
       return String("");                            // return null string if write to log file fails
@@ -58,14 +58,14 @@ String writeToLogFile(DewLog dewlog) {
 
   if (int numbytes = logFile.write(logLine.c_str()) == -1) {
     if (DEBUG) {
-      String errString = "Error: Failed to write to log file: " + dewlog.fullPathLogFile + ". Data: " + logLine;
+      String errString = "Error: Failed to write to log file, error -1: " + dewlog.fullPathLogFile + ". Data: " + logLine;
       Serial.println(errString);
     }
     return String("");                                  // return null string if write to log file fails
   } else {
     if (logLine.length() != numbytes) {
       if (DEBUG) {
-        String errString = "Error: Failed to write to log file: " + dewlog.fullPathLogFile + ". Data: " + logLine;
+        String errString = "Error: Failed to write to log file, error wrong bytes: " + dewlog.fullPathLogFile + ". Data: " + logLine;
         Serial.println(errString);
         errString = String("Error: Wrote ") + String(numbytes) + String(", expected ") + String(logLine.length()) + String(" bytes written.");
         Serial.println(errString);

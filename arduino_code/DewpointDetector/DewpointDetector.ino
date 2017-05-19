@@ -129,7 +129,8 @@ DewLog dewlog;                            // struct containing dew logging data
 float t, h, d, objt, diet;                // globals for sensors: temp, humidity, dewpoint temp, object temp and die temp
 unsigned long rightNow;                   //global for the current time
 unsigned long nextSensorTime;             // global for next sensor time
-int sensorTimerSecs;
+int sensorTimerSecs = 10;
+boolean rolled = false;
 String fullPathLogFile;                   //global containing full path name of current log file
 boolean sdAvailable;                      //global for indicating whether SD card is available
 uint32_t cardSize;                        //global for card size
@@ -146,10 +147,10 @@ void setup() {
   }
 
   startTouchScreen();                       // starts touch screen, TFT and SD card drivers
+  drawAppScreen();
   startTMP007();                            // starts thermopile sensor
   startDHT22();                             // starts humidity-temperature sensor
-  sensorTimerSecs = 10;                     // time in seconds between sensor readings
-  nextSensorTime = (unsigned long)millis() + sensorTimerSecs*1000;                
+  nextSensorTime = millis() + sensorTimerSecs*1000;                
                                             // time in millis until the next sensor reading
   if (sdAvailable = startSdFat()) {         // initialize the SD card
     fullPathLogFile = setupLogFile();       // set the path and name of the log file
