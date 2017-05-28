@@ -8,35 +8,38 @@
 
 boolean startSdFat() {
   if (DEBUG) {
-    Serial.print("Starting SD card.");
+    Serial.println("Starting SD card.");
   }
 
   #if USE_SDIO
-    if (!sd.cardBegin()) {
+    if (!sd.begin()) {
+      sd.initErrorHalt();
       if (DEBUG) {
-        Serial.println("cardBegin failed. SD card is not present.");
-        Serial.println("Operation will continue but no SD logging will occur.");
+        Serial.println("ERROR: begin() failed. SD card is not present.");
       }
       return false;
     }
   #else  // USE_SDIO
     // Initialize at the highest speed supported by the board that is
     // not over 50 MHz. Try a lower speed if SPI errors occur.
-    if (!sd.cardBegin(SD_CHIP_SELECT, SD_SCK_MHZ(50))) {
+    if (!sd.begin(SD_CHIP_SELECT, SD_SCK_MHZ(50))) {
+      sd.initErrorHalt();
       if (DEBUG) {
-        Serial.println("cardBegin failed. SD card is not present.");
-        Serial.println("Operation will continue but no SD logging will occur.");
+        Serial.println("ERROR: begin() failed. SD card is not present.");
       }
       return false;
   }
   #endif  // USE_SDIO 
 
-  if (! sdFreeSpace) {
+  if (!sdFreeSpace()) {
+    if (DEBUG) {
+      Serial.println("ERROR: less than 80% free space on SD disk");
+    }
     return false;                                 // free space is less than 80% of SD disk
   }
   
   if (DEBUG) {
-    Serial.println("SD card started successfully and there's room on the disk to write logs.");
+    Serial.println("INFO: SD card started successfully and there's room on the disk to write logs.");
   }
   return true;
 }

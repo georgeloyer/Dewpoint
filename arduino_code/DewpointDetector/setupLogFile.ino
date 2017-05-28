@@ -19,64 +19,96 @@
  * 
  */
 String setupLogFile() {
-  SdFile file;
+  SdFile myFile;
   char tempFileName[13];
   String fileName;
-  
-  fullPathLogFile = "/datalog";
-  if (!sd.chdir(fullPathLogFile.c_str(), true)) {       // make /datalog the working directory, create it if necessary
-    if (!sd.mkdir(fullPathLogFile.c_str(), true)) {
-      if (DEBUG) {
-        Serial.println("Error: cannot create /datalog folder on SD card");
+
+  fullPathLogFile = "datalog";
+  if (!sd.exists("datalog")) {
+    if (!sd.mkdir(fullPathLogFile.c_str(), true)) {       // doesn't exist? try to create it and its parent directories
+      if (DEBUG) {                                        // failed to create the top folder, give up
+        Serial.print("ERROR: cannot create ");
+        Serial.print(fullPathLogFile.c_str());
+        Serial.println(" folder on SD card");
       }
       return String("");                              // on failure to create datalog folder, return null String
     } else {
-      sd.chdir(fullPathLogFile.c_str(), true);
+      if (DEBUG) {
+        Serial.println("INFO: Created /datalog folder");
+      }
     }
   }
 
-  sd.vwd()->rewind();                                 // find the last dlogNNN folder in /datalog (cwd)
-  fileName = "";
-  while (file.openNext(sd.vwd(), O_READ)) {
-    if (file.isDir()) {
-      file.getSFN(tempFileName);
-      if (String(tempFileName).substring(1,4) == "dlog") {
+  fullPathLogFile = "/" + fullPathLogFile;
+  if (!sd.chdir(fullPathLogFile.c_str())) {
+    if (DEBUG) {
+      Serial.print("ERROR: failed to chdir to ");
+      Serial.println(fullPathLogFile.c_str());
+    }
+    return String("");
+  }
+
+  sd.vwd()->rewind();
+  fileName = "";                                              // set filename to null
+  while (myFile.openNext(sd.vwd(), O_READ)) {
+    if (myFile.isDir()) {
+      myFile.getSFN(tempFileName);
+      if (String(tempFileName).substring(0,4) == "dlog") {
         fileName = String(tempFileName);
       }
     }
-    file.close();
+    myFile.close();
   }
   
-  if (fileName == "") {
+  if (fileName == "") {                                       // we didn't find a dlogNNN file, so we create the first one
     fileName = "dlog001";
-    if (!sd.mkdir(fileName.c_str(), true)) {
+    if (!sd.mkdir(fileName.c_str())) {                         // create the path
       if (DEBUG) {
-        Serial.println("Error: cannot create /datalog/dlogNN folder.");
+        Serial.print("ERROR: cannot create ");
+        Serial.print(fileName.c_str());
+        Serial.print(" folder in ");
+        Serial.println(fullPathLogFile.c_str());
       }
       return String("");
     }
   }
 
-  sd.chdir(fileName.c_str(), true);
-  fullPathLogFile = fullPathLogFile + "/" + fileName;
+  fullPathLogFile += "/" + fileName;
+  if (!sd.chdir(fullPathLogFile.c_str())) {
+    if (DEBUG) {
+      Serial.print("ERROR: unable to set working directory to ");
+      Serial.println(fullPathLogFile.c_str());
+    }
+    return String("");
+  }
 
-  sd.vwd()->rewind();                                   // find the last dewptNN.log file in /datalog/dlogNN folder  
+  sd.vwd()->rewind();
   fileName = "";
-  while (file.openNext(sd.vwd(), O_READ)) {
-    if (file.isFile()) {
-      file.getSFN(tempFileName);
-      if (String(tempFileName).substring(1,5) == "dewpt") {
+  while (myFile.openNext(sd.vwd(), O_READ)) {
+    if (!myFile.isDir()) {
+      myFile.getSFN(tempFileName);
+      if (String(tempFileName).substring(0,5) == "dewpt") {
         fileName = String(tempFileName);
       }
     }
-    file.close();
+    myFile.close();
   }
 
-  if (fileName == "") {
+  if (fileName == "") {                                 // and we didn't find one, set the filename to the first log file in this folder
     fileName = "dewpt01.log";
   }
 
-  fullPathLogFile = fullPathLogFile + "/" + fileName;
+  fullPathLogFile +=  "/" + fileName;
+
+  if (!myFile.open(fullPathLogFile.c_str(), FILE_WRITE)) {
+    if (DEBUG) {
+      Serial.print("ERROR: cannot open log file ");
+      Serial.println(fullPathLogFile);
+    }
+    return String("");
+  } else {
+    myFile.close();
+  }
 
   return fullPathLogFile;
 }

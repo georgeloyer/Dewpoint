@@ -23,41 +23,21 @@
  * unit, including display of the three measures in 
  * real time.
  *******************************************************/
-// Event Manager declarations
-#include "EventManager.h"
-#include "dewLog.h"
-#define DEBUG 1
+// INCLUDES
+#include <SPI.h>                          // used by Wifi library
+#include "EventManager.h"                 // Event Manager library
+#include "DewpointDetector.h"             // local include file for declaring all functions
+#include <DHT_U.h>                        // DHT unified sensor library (both must be included)
+#include "Adafruit_TMP007.h"              // TMP007 sensor library
+#include <WiFi101.h>                      // Wifi library
+#include <Adafruit_ILI9341.h>             // TFT Hardware-specific library
+#include <Adafruit_STMPE610.h>            // TFT Touch Screen library
+#include "SdFat.h"                        // SD card SdFat library
 
-// Humidity-Temperature Sensor declarations
-#include <Adafruit_Sensor.h>
-#include <DHT.h>
-#include <DHT_U.h>
-#define DHTPIN 11     // what digital pin we're connected to
-#define DHTTYPE DHT22   // DHT 22  (AM2302), AM2321
-// Connect pin 1 (on the left) of the sensor to +3.3V
-// Connect pin 2 of the sensor to whatever your DHTPIN is
-// Connect pin 4 (on the right) of the sensor to GROUND
-// Connect a 10K resistor from pin 2 (data) to pin 1 (power) of the sensor
-// Depends on Adafruit Unified Sensor Library:  https://github.com/adafruit/Adafruit_Sensor
-// Depends on DHT Sensor Library: https://github.com/adafruit/DHT-sensor-library
-
-// Thermopile sensor declarations
-#include <Wire.h>
-#include "Adafruit_TMP007.h"
-// Connect VCC to +3.3V 
-// Gnd -> Gnd
-// SCL connects to the I2C clock pin.
-// SDA connects to the I2C data pin. 
-
-// WiFi declarations
-#include <SPI.h>
-#include <WiFi101.h>
-
-// TFT screen and graphics library declarations
-#include <Adafruit_GFX.h>    // Core graphics library
-#include <Adafruit_ILI9341.h> // Hardware-specific library
-#include "SdFat.h"
-#include <Adafruit_STMPE610.h>
+// DEFINEs
+#define DEBUG 1                           // turn Serial debug statements on
+#define DHTPIN 11                         // what digital pin we're connected to
+#define DHTTYPE DHT22                     // DHT 22  (AM2302), AM2321
 
 // CPU macro setup of pins for TFT screen
 #ifdef ESP8266
@@ -99,30 +79,13 @@
 
 #define PENRADIUS 3
 
-// Set USE_SDIO to zero for SPI card access. 
-#define USE_SDIO 0
-/*
- * SD chip select pin.  Common values are:
- *
- * Arduino Ethernet shield, pin 4.
- * SparkFun SD shield, pin 8.
- * Adafruit SD shields and modules, pin 10.
- * Default SD chip select is the SPI SS pin.
- */
-const uint8_t SD_CHIP_SELECT = SD_CS;
-#if USE_SDIO
-// Use faster SdioCardEX
-SdFatSdioEX sd;
-// SdFatSdio sd;
-#else // USE_SDIO
-SdFat sd;
-#endif  // USE_SDIO
-
-// instantiate instances of each object type
+// INSTANTIATE instances of each object type
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 Adafruit_STMPE610 ts = Adafruit_STMPE610(STMPE_CS);
 DHT_Unified dht(DHTPIN, DHTTYPE);
 Adafruit_TMP007 tmp007;                   //Start with the default i2c address 0x40
+const uint8_t SD_CHIP_SELECT = SD_CS;     // SD chip select pin.  
+SdFat sd;                                 // SdFat device
 EventManager gEM;                         // global for event manager
 sensors_event_t event;                    //global for event manager
 DewLog dewlog;                            // struct containing dew logging data
@@ -146,7 +109,7 @@ void setup() {
     Serial.println("DewpointDetector 1.0");
   }
 
-  startTouchScreen();                       // starts touch screen, TFT and SD card drivers
+  startTouchScreen();                       // starts touch screen, TFT 
   drawAppScreen();
   startTMP007();                            // starts thermopile sensor
   startDHT22();                             // starts humidity-temperature sensor
@@ -154,6 +117,16 @@ void setup() {
                                             // time in millis until the next sensor reading
   if (sdAvailable = startSdFat()) {         // initialize the SD card
     fullPathLogFile = setupLogFile();       // set the path and name of the log file
+    if (fullPathLogFile == "") {
+      sdAvailable = false;                  // error encountered during setupLogFile - turn sdAvailable false
+      if (DEBUG) {
+        Serial.println("ERROR: failure during setupLogFile, no logging will be done");
+      }
+    }
+  } else {
+    if (DEBUG) {
+      Serial.println("ERROR: SD card initialization failed. No logging will be done");
+    }
   }
   // setup listeners for EventManager
   gEM.addListener(EventManager::kEventUser0, listenerSensorTimer); // Sensor timer listener
@@ -168,6 +141,22 @@ void loop() {
   gEM.processEvent();
   createSensorTimerEvents();
 }
+
+// SENSOR COMMENTS
+// DHT22
+// Connect pin 1 (on the left) of the sensor to +3.3V
+// Connect pin 2 of the sensor to whatever your DHTPIN is
+// Connect pin 4 (on the right) of the sensor to GROUND
+// Connect a 10K resistor from pin 2 (data) to pin 1 (power) of the sensor
+// Depends on Adafruit Unified Sensor Library:  https://github.com/adafruit/Adafruit_Sensor
+// Depends on DHT Sensor Library: https://github.com/adafruit/DHT-sensor-library
+
+// TMP007 - Thermopile sensor declarations
+// Connect VCC to +3.3V 
+// Gnd -> Gnd
+// SCL connects to the I2C clock pin.
+// SDA connects to the I2C data pin. 
+
 
 
 /*

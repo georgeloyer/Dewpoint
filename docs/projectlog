@@ -562,3 +562,127 @@ With the basic components for UI and processor, I can start prototyping the humi
 			3. correct return code when TS fails to start
 			4. correct return code when TFT fails to start
 			5. correct return code when both TS and TFT fail to start
+
+5/21/2017
+	include hierarchy
+		SPI.h	SPI/SPI.h
+			Arduino.h
+		EventManager.h	libraries/EventManager/EventManager.h
+			Arduino.h
+		DewpointDetector.h
+		Adafruit_Sensor.h			removed - included in DHT_U.h
+			Arduino.h
+			Print.h
+		DHT.h					removed - included in DHT_U.h
+			Arduino.h
+		DHT_U.h
+			Adafruit_Sensor.h
+			DHT.h
+		Wire.h  ??can’t find this one, 		removed - included in STMPE610.h
+		Adafruit_TMP007.h
+			Arduino.h
+			Wire.h
+		WiFi101.h
+			Arduino.h
+			driver/include/m2m_wifi.h
+				common/include/nm_common.h
+					bsp/include/nm_bsp.h
+					common/include/nm_debug.h
+						bsp/include/nm_bsp.h
+						bsp/include/nm_bsp_internal.h
+							bsp/include/nm_bsp_avr.h
+							bsp/include/nm_bsp_samd21.h
+				driver/include/m2m_types.h
+					common/include/nm_common.h
+					m2m_common.h (missing?)
+				driver/source/nmdrv.h
+					common/include/nm_common.h
+			socket/include/socket.h
+				common/include/nm_common.h
+			WiFiClient.h
+				Arduino.h
+				Client.h (missing?)
+				IPAddress.h (missing?)
+				socket/include/socket_buffer.h  
+					socket/include/socket.h
+						common/include/nm_common.h
+			WiFiSSLClient.h
+				WiFiClient.h
+			WiFiServer.h
+				Arduino.h
+				Server.h (missing?)
+		Adafruit_GFX.h				removed - included in ILI9341.h
+			Arduino.h
+			Print.h
+			gfxfont.h
+		Adafruit_ILI9341.h
+			Arduino.h
+			Print.h
+			SPI.h
+			Adafruit_GFX.h
+		Adafruit_STMPE610.h
+			Arduino.h
+			Wire.h
+		SdFat.h
+			SysCall.h
+				Arduino.h
+				SPI.h
+				application.h
+					vector (no .h?)
+			BlockDriver.h
+				FatLib/BaseBlockDriver.h
+					FatLibConfig.h
+						stdint.h
+						SdFatConfig.h
+							stdint.h
+							avr/io.h
+						avr/io.h
+							avr/sfr_defs.h
+							avr/portpins.h
+							avr/common.h
+							avr/version.h
+							and MANY others!
+				SdCard/SdSpiCard.h
+					stddef.h
+					SysCall.h
+					SdInfo.h
+					FatLib/BaseBlockDriver.h
+					SpiDriver/SdSpiDriver.h
+						Arduino.h
+						SPI.h
+						SdSpiBaseDriver.h
+						SdFatConfg.h
+			FatLib/FatLib.h
+				ArduinoFiles.h
+					FatLibConfig.h
+					FatFile.h
+						string.h
+						stddef.h
+						limits.h
+						FatLibConfig.h
+						FatApiConstants.h
+						FatStructs.h
+						FatVolume.h
+					limits.h
+				ArduinoStream.h
+					FatLibConfig.h
+					bufstream.h
+						string.h
+							stddef.h
+						iostream.h
+							istream.h
+								ios.h
+									FatFile.h
+							ostream.h
+								ios.h
+				FatFileSystem.h
+				FatLibConfig.h
+				FatVolume.h
+				FatFile.h
+				StdioStream.h
+				fstream.h
+			SdCard/SdioCard.h
+				SysCall.h
+				BlockDriver.h
+
+			

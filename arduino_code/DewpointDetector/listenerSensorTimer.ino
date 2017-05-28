@@ -7,6 +7,8 @@
  */
  
 void listenerSensorTimer (int eventCode, int eventParam) {
+  String logLine;
+  
   // read the TMP007 thermopile sensor
   objt = tmp007.readObjTempC();
   if (DEBUG) {
@@ -55,21 +57,30 @@ void listenerSensorTimer (int eventCode, int eventParam) {
   // write data to the TFT display
   displayData(h, t, objt, d);
 
-  // build log struct
-  dewlog.fullPathLogFile = fullPathLogFile; 
-  dewlog.dateTime = "2107-05-14 10:57:45";
-  dewlog.humidity = h;
-  dewlog.temperature = t;
-  dewlog.mirrorTemp = objt;
-  dewlog.dewpointTemp = d;
-  dewlog.heaterStatus = false;
-   
-  // write data to the IOT service
-  // sendDataIot(dewlog);
-
-  // write data to the SD card log
-  fullPathLogFile = writeToLogFile(dewlog);
-
+  if (sdAvailable) {
+    // create the log line
+    logLine = String("2107-05-14 10:57:45") + "\t";
+    logLine += String(h, 2) + "\t";
+    logLine += String(t, 2) + "\t";
+    logLine += String(objt, 2) + "\t";
+    logLine += String(d, 2) + "\t";
+    if (dewlog.heaterStatus) {
+      logLine += String("Heater ON") + "\r";
+    } else {
+      logLine += String("Heater OFF") + "\r";
+    }
+     
+    // write data to the IOT service
+    // sendDataIot(dewlog);
+  
+    // write data to the SD card log
+    fullPathLogFile = writeToLogFile(logLine);
+  } else {
+    if (DEBUG) {
+      Serial.println("No logging to SD card.");
+    }
+  }
+  
   return;
 }
 

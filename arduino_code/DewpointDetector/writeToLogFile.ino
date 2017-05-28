@@ -13,13 +13,12 @@
  * Returns the current log file name and path
  */
 
-String writeToLogFile(DewLog dewlog) {
+String writeToLogFile(String logLine) {
   SdFile logFile;
-  String logLine;
 
-  if (!logFile.open(dewlog.fullPathLogFile.c_str(), O_CREAT | O_APPEND | O_RDWR)) {
+  if (!logFile.open(fullPathLogFile.c_str(), O_CREAT | O_APPEND | O_RDWR)) {
     if (DEBUG) {
-      String errString = "Error: Failed to open log file: " + dewlog.fullPathLogFile;
+      String errString = "ERROR: writeToLogFile: Failed to open log file: " + fullPathLogFile;
       Serial.println(errString);
     }
     return String("");                            // return null string if write to log file fails
@@ -27,47 +26,36 @@ String writeToLogFile(DewLog dewlog) {
 
   if (logFile.fileSize() > 102400) {              // roll the log file if it's greater than 100KB in size
     logFile.close();                              // close the file that is greater than 100KB in size
-    String newLogFile = rollLogFile(dewlog.fullPathLogFile);
+    String newLogFile = rollLogFile(fullPathLogFile);
     if (newLogFile == "") {
       if (DEBUG) {
         Serial.println("Log file roll failed to return a valid log file name and path.");
       }
       return newLogFile;                          // return null string if write to log file fails
     }
-    dewlog.fullPathLogFile = newLogFile;
+    fullPathLogFile = newLogFile;
 
     // open the new log file
       if (DEBUG) {
-        String errString = "Error: Failed to open NEW log file: " + dewlog.fullPathLogFile;
+        String errString = "Error: Failed to open NEW log file: " + fullPathLogFile;
         Serial.println(errString);
       }
       return String("");                            // return null string if write to log file fails
     }
 
-  // create the log line
-  logLine = dewlog.dateTime + "\t";
-  logLine += String(dewlog.humidity, 2) + "\t";
-  logLine += String(dewlog.temperature, 2) + "\t";
-  logLine += String(dewlog.mirrorTemp, 2) + "\t";
-  logLine += String(dewlog.dewpointTemp, 2) + "\t";
-  if (dewlog.heaterStatus) {
-    logLine += String("Heater ON") + "\r";
-  } else {
-    logLine += String("Heater OFF") + "\r";
-  }
 
   if (int numbytes = logFile.write(logLine.c_str()) == -1) {
     if (DEBUG) {
-      String errString = "Error: Failed to write to log file, error -1: " + dewlog.fullPathLogFile + ". Data: " + logLine;
+      String errString = "ERROR: Failed to write to log file, error -1: " + fullPathLogFile + ". Data: " + logLine;
       Serial.println(errString);
     }
     return String("");                                  // return null string if write to log file fails
   } else {
     if (logLine.length() != numbytes) {
       if (DEBUG) {
-        String errString = "Error: Failed to write to log file, error wrong bytes: " + dewlog.fullPathLogFile + ". Data: " + logLine;
+        String errString = "ERROR: Failed to write to log file, error wrong bytes: " + fullPathLogFile + ". Data: " + logLine;
         Serial.println(errString);
-        errString = String("Error: Wrote ") + String(numbytes) + String(", expected ") + String(logLine.length()) + String(" bytes written.");
+        errString = String("ERROR: Wrote ") + String(numbytes) + String(", expected ") + String(logLine.length()) + String(" bytes written.");
         Serial.println(errString);
       }
       return String("");                                // return null string if write to log file fails.
@@ -76,6 +64,6 @@ String writeToLogFile(DewLog dewlog) {
 
   logFile.close();
 
-  return dewlog.fullPathLogFile;
+  return fullPathLogFile;
 }
 
