@@ -42,6 +42,8 @@ void listenerSensorTimer (int eventCode, int eventParam) {
   }
   d = dewpointC(t, h);
 
+  heaterStatus = false;
+
   if (DEBUG) {
     Serial.print("Humidity: ");
     Serial.print(h);
@@ -57,6 +59,9 @@ void listenerSensorTimer (int eventCode, int eventParam) {
   // write data to the TFT display
   displayData(h, t, objt, d);
 
+  // write data to the IOT service
+  // sendDataIot(h, t, objt, d, heaterStatus);
+  
   if (sdAvailable) {
     // create the log line
     logLine = String("2107-05-14 10:57:45") + "\t";
@@ -64,17 +69,18 @@ void listenerSensorTimer (int eventCode, int eventParam) {
     logLine += String(t, 2) + "\t";
     logLine += String(objt, 2) + "\t";
     logLine += String(d, 2) + "\t";
-    if (dewlog.heaterStatus) {
+    if (heaterStatus) {
       logLine += String("Heater ON") + "\r";
     } else {
       logLine += String("Heater OFF") + "\r";
     }
      
-    // write data to the IOT service
-    // sendDataIot(dewlog);
-  
     // write data to the SD card log
-    fullPathLogFile = writeToLogFile(logLine);
+    if (!writeToLogFile(logLine)) {
+      if (DEBUG) {
+      Serial.println("ERROR: listenerSensorTimer failed to write data to log.");
+      }
+    }
   } else {
     if (DEBUG) {
       Serial.println("No logging to SD card.");

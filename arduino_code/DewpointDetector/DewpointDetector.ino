@@ -26,7 +26,6 @@
 // INCLUDES
 #include <SPI.h>                          // used by Wifi library
 #include "EventManager.h"                 // Event Manager library
-#include "DewpointDetector.h"             // local include file for declaring all functions
 #include <DHT_U.h>                        // DHT unified sensor library (both must be included)
 #include "Adafruit_TMP007.h"              // TMP007 sensor library
 #include <WiFi101.h>                      // Wifi library
@@ -78,6 +77,7 @@
 #define TS_MAXY 3750
 
 #define PENRADIUS 3
+#define MAXLOGFILE 102400                 // max log file size 100KB
 
 // INSTANTIATE instances of each object type
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
@@ -87,16 +87,16 @@ Adafruit_TMP007 tmp007;                   //Start with the default i2c address 0
 const uint8_t SD_CHIP_SELECT = SD_CS;     // SD chip select pin.  
 SdFat sd;                                 // SdFat device
 EventManager gEM;                         // global for event manager
-sensors_event_t event;                    //global for event manager
-DewLog dewlog;                            // struct containing dew logging data
+sensors_event_t event;                    // global for event manager
 float t, h, d, objt, diet;                // globals for sensors: temp, humidity, dewpoint temp, object temp and die temp
-unsigned long rightNow;                   //global for the current time
+unsigned long rightNow;                   // global for the current time
 unsigned long nextSensorTime;             // global for next sensor time
-int sensorTimerSecs = 10;
-boolean rolled = false;
-String fullPathLogFile;                   //global containing full path name of current log file
-boolean sdAvailable;                      //global for indicating whether SD card is available
-uint32_t cardSize;                        //global for card size
+int sensorTimerSecs = 10;                 // global time between sensor readings
+boolean heaterStatus = false;             // global status of heater
+boolean rolled = false;                   // global boolean for rolled status
+String fullPathLogFile;                   // global containing full path name of current log file
+boolean sdAvailable;                      // global for indicating whether SD card is available
+uint32_t cardSize;                        // global for card size
 
 void setup() {
   if (DEBUG) {
@@ -116,16 +116,15 @@ void setup() {
   nextSensorTime = millis() + sensorTimerSecs*1000;                
                                             // time in millis until the next sensor reading
   if (sdAvailable = startSdFat()) {         // initialize the SD card
-    fullPathLogFile = setupLogFile();       // set the path and name of the log file
-    if (fullPathLogFile == "") {
+    if (!setupLogFile()) {                  // set the path and name of the log file
       sdAvailable = false;                  // error encountered during setupLogFile - turn sdAvailable false
       if (DEBUG) {
-        Serial.println("ERROR: failure during setupLogFile, no logging will be done");
+        Serial.println("ERROR: setup: failure during setupLogFile, no logging will be done");
       }
     }
   } else {
     if (DEBUG) {
-      Serial.println("ERROR: SD card initialization failed. No logging will be done");
+      Serial.println("ERROR: setup: SD card initialization failed. No logging will be done");
     }
   }
   // setup listeners for EventManager

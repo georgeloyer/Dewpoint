@@ -18,7 +18,7 @@
  * setupLogFile assumes that the progam may have been running and producing log files in the past.
  * 
  */
-String setupLogFile() {
+boolean setupLogFile() {
   SdFile myFile;
   char tempFileName[13];
   String fileName;
@@ -31,7 +31,7 @@ String setupLogFile() {
         Serial.print(fullPathLogFile.c_str());
         Serial.println(" folder on SD card");
       }
-      return String("");                              // on failure to create datalog folder, return null String
+      return false;                                       // on failure to create datalog folder, return false
     } else {
       if (DEBUG) {
         Serial.println("INFO: Created /datalog folder");
@@ -45,7 +45,7 @@ String setupLogFile() {
       Serial.print("ERROR: failed to chdir to ");
       Serial.println(fullPathLogFile.c_str());
     }
-    return String("");
+    return false;
   }
 
   sd.vwd()->rewind();
@@ -69,7 +69,7 @@ String setupLogFile() {
         Serial.print(" folder in ");
         Serial.println(fullPathLogFile.c_str());
       }
-      return String("");
+      return false;
     }
   }
 
@@ -79,7 +79,7 @@ String setupLogFile() {
       Serial.print("ERROR: unable to set working directory to ");
       Serial.println(fullPathLogFile.c_str());
     }
-    return String("");
+    return false;
   }
 
   sd.vwd()->rewind();
@@ -105,11 +105,11 @@ String setupLogFile() {
       Serial.print("ERROR: cannot open log file ");
       Serial.println(fullPathLogFile);
     }
-    return String("");
+    return false;
   } else {
     myFile.close();
   }
 
-  return fullPathLogFile;
+  return true;
 }
 

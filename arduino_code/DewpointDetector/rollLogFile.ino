@@ -10,14 +10,14 @@
  * The first folder number is 001 and the first log file in a folder is 01
  */
 
-String rollLogFile (String fullPathLogFile) {
+boolean rollLogFile () {
   SdFile newFile;
   
   String logFileName = fullPathLogFile.substring(fullPathLogFile.lastIndexOf("/")+1);
   String folderName = fullPathLogFile.substring(fullPathLogFile.indexOf("/", 2)+1, fullPathLogFile.lastIndexOf("/"));
   String rootName = fullPathLogFile.substring(1, fullPathLogFile.indexOf("/", 2));
-  int logFileCount = logFileName.substring(6,7).toInt();
-  int folderCount = folderName.substring(5,7).toInt();
+  int logFileCount = logFileName.substring(5,7).toInt();
+  int folderCount = folderName.substring(4,7).toInt();
 
   if (logFileCount < 99) {                                              // increase log file number by one
     logFileCount++;
@@ -46,8 +46,15 @@ String rollLogFile (String fullPathLogFile) {
   if (sd.exists(fullPathLogFile.c_str())) {                             // if the file exists, we are rolling over and we remove it
     sd.remove(fullPathLogFile.c_str());
   }
-  newFile.open(fullPathLogFile.c_str(), O_CREAT | O_RDWR);                   // Open the file to create it, then close it
-  newFile.close();
+  if (!newFile.open(fullPathLogFile.c_str(), O_CREAT | O_RDWR)) {       // Open the file to create it, then close it
+    if (DEBUG) {
+      Serial.print("ERROR: rollLogFile: failed to open new file after rolling: ");
+      Serial.println(fullPathLogFile.c_str());
+    }
+    return false;                                                       // return false for failure to create new file
+  } else {
+   newFile.close();
+  }
 
   if (DEBUG) {
     String errMsg = "INFO: Rollover to ";
@@ -55,6 +62,6 @@ String rollLogFile (String fullPathLogFile) {
     Serial.println(errMsg);
   }
   
-  return fullPathLogFile;
+  return true;                                                          // return true on success
 }
 
