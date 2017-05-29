@@ -25,7 +25,7 @@ void listenerSensorTimer (int eventCode, int eventParam) {
   dht.temperature().getEvent(&event);
   if (isnan(event.temperature)) {
     if (DEBUG) {
-      Serial.println("Error reading temperature!");
+      Serial.println("ERROR: listenerSensorTimer: Error reading temperature on DHT22.");
     }
   }
   else {
@@ -34,7 +34,7 @@ void listenerSensorTimer (int eventCode, int eventParam) {
   dht.humidity().getEvent(&event);
   if (isnan(event.relative_humidity)) {
     if (DEBUG) {
-      Serial.println("Error reading temperature!");
+      Serial.println("ERROR: listenerSensorTimer: Error reading humidity on DHT22.");
     }
   }
   else {

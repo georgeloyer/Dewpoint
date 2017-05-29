@@ -15,7 +15,7 @@ boolean rollLogFile () {
   
   String logFileName = fullPathLogFile.substring(fullPathLogFile.lastIndexOf("/")+1);
   String folderName = fullPathLogFile.substring(fullPathLogFile.indexOf("/", 2)+1, fullPathLogFile.lastIndexOf("/"));
-  String rootName = fullPathLogFile.substring(1, fullPathLogFile.indexOf("/", 2));
+  String rootName = fullPathLogFile.substring(0, fullPathLogFile.indexOf("/", 2));
   int logFileCount = logFileName.substring(5,7).toInt();
   int folderCount = folderName.substring(4,7).toInt();
 
