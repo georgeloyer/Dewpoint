@@ -1,5 +1,5 @@
 /*
- * rollLogFile(String fullPathLogFile)
+ * boolean rollLogFile()
  * 
  * this function is called when the program detects that the size of the current log
  * file exceeds the file size limit configured for log files.

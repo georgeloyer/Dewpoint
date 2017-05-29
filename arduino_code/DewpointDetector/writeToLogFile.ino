@@ -1,5 +1,5 @@
 /*
- * writeToLogFile(DewLog dewlog)
+ * boolean writeToLogFile(String logLine)
  * History: 
  * 2017-05    gel Original
  * 2017-05-17 gel TODO: consider revising population of log line from dewlog struct to include data validation for specific
@@ -15,6 +15,7 @@
 
 boolean writeToLogFile(String logLine) {
   SdFile logFile;
+  int numbytes;
 
   if (!logFile.open(fullPathLogFile.c_str(), O_CREAT | O_APPEND | O_RDWR)) {
     if (DEBUG) {
@@ -43,7 +44,7 @@ boolean writeToLogFile(String logLine) {
     }
   }
 
-  if (int numbytes = logFile.write(logLine.c_str()) == -1) {
+  if ((numbytes = logFile.write(logLine.c_str())) == -1) {
     if (DEBUG) {
       String errString = "ERROR: writeToLogFile: Failed to write to log file, error -1: " + fullPathLogFile + ". Data: " + logLine;
       Serial.println(errString);
@@ -55,6 +56,8 @@ boolean writeToLogFile(String logLine) {
         String errString = "ERROR: writeToLogFile: Failed to write to log file, error wrong bytes: " + fullPathLogFile + ". Data: " + logLine;
         Serial.println(errString);
         errString = String("ERROR: Wrote ") + String(numbytes) + String(", expected ") + String(logLine.length()) + String(" bytes written.");
+        Serial.println(errString);
+        errString = String("ERROR: write error ") + String(logFile.getWriteError());
         Serial.println(errString);
       }
       return false;                                // return false if write to log file fails.

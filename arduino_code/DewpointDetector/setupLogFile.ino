@@ -1,5 +1,5 @@
 /*
- * setupLogFile()
+ * boolean setupLogFile()
  * History: 
  *  2017-05 gel Original version
  *  2017-05-16 gel  TODO: revise to include current.txt file in /datalog folder containing the path of the current log file, 

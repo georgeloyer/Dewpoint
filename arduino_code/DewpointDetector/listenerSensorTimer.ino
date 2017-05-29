@@ -70,9 +70,9 @@ void listenerSensorTimer (int eventCode, int eventParam) {
     logLine += String(objt, 2) + "\t";
     logLine += String(d, 2) + "\t";
     if (heaterStatus) {
-      logLine += String("Heater ON") + "\r";
+      logLine += String("Heater ON") + "\n";
     } else {
-      logLine += String("Heater OFF") + "\r";
+      logLine += String("Heater OFF") + "\n";
     }
      
     // write data to the SD card log
