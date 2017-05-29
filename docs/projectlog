@@ -509,13 +509,13 @@ With the basic components for UI and processor, I can start prototyping the humi
 			calculated table.
 		void displayData(float h, float t, float o, float d) - no test
 		void drawAppScreen() - no test
-		void listNetworks() - test with wifi
+		void listNetworks() - no test library
 		void listenerSensorTimer (int eventCode, int eventParam) - performance run without any errors in reading the sensors
 		void print2Digits(byte thisByte) - provided library, no test
 		void printBSSID(byte bssid[]) - provided library, no test
 		void printEncryptionType(int thisType) - provided library, no test
 		void printMacAddress() - provided library, no test
-		void rollLogFile () - 
+		boolean rollLogFile () - 
 			1. test for correct rotation of log files through a full cycle, but shorten the cycle by making the max size of log file 10K 
 			2. test one digit and two digit log file names, and one, two and three digit log folder names; 
 			3. rollover to new folders; 
@@ -531,7 +531,7 @@ With the basic components for UI and processor, I can start prototyping the humi
 			2. validate that correct boolean result returns up to disk 95% full
 			3. reformat the SD drive
 		boolean setupLogFile()
-			1. returns a correct data log file name when no files are on the disk
+			1. returns true when no files are on the disk
 			1a. creates the first folder and file
 			2. returns a correct data log file name when there are varying numbers of folders and log files in them
 			2a. 5 folders, 67 log files

@@ -11,6 +11,7 @@ rsync -azvt /Users/gloyer/Documents/Arduino/DewpointCalcTest /Users/gloyer/Docum
 rsync -azvt /Users/gloyer/Documents/Arduino/FeatherHumTempDew /Users/gloyer/Documents/Projects/Dewpoint/arduino_code
 rsync -azvt /Users/gloyer/Documents/Arduino/TouchScreenEvtMgrTest /Users/gloyer/Documents/Projects/Dewpoint/arduino_code
 rsync -azvt /Users/gloyer/Documents/Arduino/TouchScreenInterruptTest /Users/gloyer/Documents/Projects/Dewpoint/arduino_code
+rsync -azvt /Users/gloyer/Documents/Arduino/testDewpointDetector /Users/gloyer/Documents/Projects/Dewpoint/arduino_code
 
 # arduino_libs
 rsync -azvt /Users/gloyer/Documents/Arduino/libraries/Adafruit_STMPE610 /Users/gloyer/Documents/Projects/Dewpoint/arduino_libs

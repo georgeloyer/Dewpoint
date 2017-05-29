@@ -4,6 +4,21 @@
  * Sensor Timer Listener is a listener on the Event Queue for specific events signalling
  * that it's time for a sensor read out, including display on the TFT screen, writing the
  * data to the IOT service, and logging locally to the SD card
+ * 
+ * SENSOR COMMENTS
+ * DHT22
+ * Connect pin 1 (on the left) of the sensor to +3.3V
+ * Connect pin 2 of the sensor to whatever your DHTPIN is
+ * Connect pin 4 (on the right) of the sensor to GROUND
+ * Connect a 10K resistor from pin 2 (data) to pin 1 (power) of the sensor
+ * Depends on Adafruit Unified Sensor Library:  https://github.com/adafruit/Adafruit_Sensor
+ * Depends on DHT Sensor Library: https://github.com/adafruit/DHT-sensor-library
+
+ * TMP007 - Thermopile sensor declarations
+ * Connect VCC to +3.3V 
+ * Gnd -> Gnd
+ * SCL connects to the I2C clock pin.
+ * SDA connects to the I2C data pin. 
  */
  
 void listenerSensorTimer (int eventCode, int eventParam) {
