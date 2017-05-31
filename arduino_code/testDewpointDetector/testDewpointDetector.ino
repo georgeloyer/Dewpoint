@@ -47,9 +47,10 @@
   }
 
   Serial.println("Test Suite for DewpointDetector");
+  Serial.println("====================================");
 
-  Serial.println("TEST: float CtoF(float)");
   // test float CtoF(float)
+  Serial.println("TEST: float CtoF(float)");
   // create canonical data
   float farenheit;
   float ctofCanonical[] = {-4.00, 14.00, 32.00, 50.00, 68.00, 86.00, 104.00, 122.00};
@@ -68,10 +69,46 @@
   } else {
     Serial.println("FAILED ctof test");
   }
+  Serial.println("====================================");
 
-  // Next test
+  // Dewpoint calculator test
   testSuccess = true;
- }
+  Serial.println("TEST: float dewpoint(temp, humidity)");
+  //create canonical data
+  float dpoint;
+  float dpHumidity[] = {10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0};
+  float dpTemperature[] = {-10.0, -5.0, 0.0, 5.0, 10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0};
+
+  float dpCanonical[][11] = {
+                            {-48.69, -42.25, -35.84, -29.45, -23.10, -16.78, -10.49, -4.23, 2.01, 8.21, 14.38},
+                            {-35.98, -30.03, -24.10, -18.18, -12.29, -6.42, -0.56, 5.27, 11.09, 16.89, 22.67},
+                            {-28.99, -23.31, -17.63, -11.97, -6.33, -0.69, 4.93, 10.53, 16.13, 21.71, 27.27},
+                            {-24.23, -18.72, -13.22 , -7.73, -2.24, 3.23, 8.69, 14.14, 19.58, 25.02, 30.44},
+                            {-20.63, -15.25, -9.88, -4.52, 0.84, 6.19, 11.54, 16.87, 22.20, 27.52, 32.84},
+                            {-17.76, -12.48, -7.21, -1.95, 3.31, 8.57, 13.82, 19.06, 24.30, 29.54, 34.76},
+                            {-15.37, -10.18, -5.00, 0.19, 5.37, 10.54, 15.71, 20.88, 26.05, 31.21, 36.37},
+                            {-13.34, -8.22, -3.10, 2.01, 7.12, 12.23, 17.34, 22.44, 27.54, 32.64, 37.74},
+                            {-11.57, -6.51, -1.46, 3.60, 8.65, 13.70, 18.75, 23.80, 28.85, 33.89, 38.94},
+                            {-10.00, -5.00, 0.00, 5.00, 10.00, 15.00, 20.00, 25.00, 30.00, 35.00, 40.00}
+                            };
+  for (int h=0; h<10; h++) {
+    for (int t=0; t<11; t++) {
+      dpoint = dewpointC(dpTemperature[t], dpHumidity[h]);
+      testLog = String("Dewpoint for temperature ") + String(dpTemperature[t],2) + String("C and Humidity ") + String(dpHumidity[h],2) + String("% is ") + String(dpoint);
+      if (abs(dpoint - dpCanonical[h][t]) > .02) {
+        testLog += String("  FAIL: ") + String(abs(dpoint - dpCanonical[h][t]), 4) + String(" difference from canonical exceeds 0.020");
+        testSuccess = false;
+      }
+      Serial.println(testLog);
+    }
+  }
+  if (testSuccess) {
+    Serial.println("PASSED dewpointC test");
+  } else {
+    Serial.println("FAILED dewpointC test");
+  }
+  Serial.println("====================================");
+}
 
  void loop() {
   
