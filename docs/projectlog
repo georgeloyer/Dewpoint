@@ -704,3 +704,70 @@ With the basic components for UI and processor, I can start prototyping the humi
 		Only very slowly coming back down in temperature.
 
 		the DHT22 occasionally fails to read both temp and humidity. should check into retrying until successful.
+
+7/13/2021
+https://perryweather.com/2020/04/01/what-is-wbgt-and-how-do-you-calculate-it/
+How to Calculate WBGT
+Wet-bulb globe temperature (in Fahrenheit) is calculated with the following equation:
+
+WBGT = (0.7 * Tw) + (0.2 * Tg) + (0.1 * T)
+
+In this formula, there are three important variables to note:
+T = Temperature in Celsius
+Tg = Globe Thermometer Temperature (in Celsius) - this is measured by a thermometer placed in a special black globe to estimate solar radiation without the effects of the light itself
+Tw = Wet-bulb Temperature (in Celsius)
+
+WHAT IS WBGT AND HOW DO YOU CALCULATE IT?
+What is WBGT?
+Wet bulb globe temperature, or WBGT, is a perceived or apparent temperature. It is more a measure of how the weather feels than the exact weather itself.
+
+Specifically, WBGT is a measure of stress caused by the heat of direct sunlight.
+
+To be accurate, one must take a variety of factors into account; temperature, humidity, wind speed, sun angle, and cloud cover all affect sunlight, heat, and the stress perceived by the body while subject to the conditions in question.
+Why is WBGT important?
+Since WBGT is a measure of heat-related stress specifically, it is an important factor to consider anytime people are performing some kind of outdoor activity.
+
+To ensure the safety of working conditions, regulations are in place for WBGT monitoring.
+
+For example, during a high school football practice, kids are training their hearts out in the heat of August. Knowing the wet bulb globe temperature can ensure that players exposed to direct sunlight and the elements will not put a dangerous amount of stress on their bodies, as well as help the coaches know how often breaks and hydration is necessary.
+
+In this case, if the WBGT was below 80, there are no extra precautions needed. But if WBGT is between 80-90, the body will stress within 20-45 minutes of work or exercise in direct sunlight, with the time until stress becoming shorter as the wet-bulb globe temperature increases. If WBGT reaches over 90, the body will become stressed in only 15 minutes and it is especially important to drink plenty of fluids and very frequent breaks in the shade.
+
+WBGT is also highly valuable information for high school and collegiate athletics, event venues, OSHA regulated construction, city sports leagues, and military training facilities. The applications are endless.
+
+This is especially important as it differs from the heat index, which only accounts for temperature and humidity in its calculation for shaded areas. Wet-bulb globe temperature is an imperative guide for maintaining a proper workload in direct sunlight as well as deterring heat strokes.
+
+WBGT can even show you when humidity decreases causing a rise in temperature, which is perfect for snowmakers.
+How to Calculate WBGT
+Wet-bulb globe temperature (in Fahrenheit) is calculated with the following equation:
+
+WBGT = (0.7 * Tw) + (0.2 * Tg) + (0.1 * T)
+
+In this formula, there are three important variables to note:
+T = Temperature in Celsius
+Tg = Globe Thermometer Temperature (in Celsius) - this is measured by a thermometer placed in a special black globe to estimate solar radiation without the effects of the light itself
+Tw = Wet-bulb Temperature (in Celsius)
+
+While the first two variables are relatively straightforward, to know how to calculate WBGT, you must first be able to answer the question: “What is Wet Bulb Temperature?”
+What is Wet Bulb Temperature?
+When water evaporates into the air it creates a cooling effect, but the amount of this cooling varies depending on the overall air temperature and the relative humidity.
+
+The wet-bulb temperature is the lowest possible temperature that air can be cooled down to by the evaporation of water alone, given constant pressure.
+
+This is represented by a rather complex formula:
+
+Tw = T * arctan[0.151977 * (rh% + 8.313659)^(1/2)] + arctan(T + rh%) - arctan(rh% - 1.676331) + 0.00391838 *(rh%)^(3/2) * arctan(0.023101 * rh%) - 4.686035
+
+Here, “T” is the temperature in celsius and “rh” represents the relative humidity.
+
+With this final calculation, you can calculate WBGT completely.
+
+7/13/2021
+After a long absence, my interest in this project is back and I'm trying to use new knowledge
+of project management to get the github repository back in shape. I have on my current Mac
+a clone of the repository in the Dewpoint projects folder and a copy of an updated folder
+in Dewpoint.interesting, because there are a lot of module folders in the updated folder
+that don't exist in the github repository, and have the white arrow on folder icon 
+indicator that they are archives (and should be able to show they are by having a .git
+file in the top folder). I think I need to delete these folders and reload them as submodules
+using my github notes documentation.
